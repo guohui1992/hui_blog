@@ -76,4 +76,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@releases/v4  
         with:  
           branch: gh-pages  # 部署到的目标分支  
-          folder: docs/dist  # 要部署的文件夹（你的构建输出）
+          folder: dist  # 要部署的文件夹（你的构建输出）
