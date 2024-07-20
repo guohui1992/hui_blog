@@ -51,14 +51,29 @@ jobs:
           path: docs/dist
 
   # 部署工作
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  # deploy:
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   name: Deploy
+  #   steps:
+  #     - name: Deploy to GitHub Pages
+  #       id: deployment
+  #       uses: actions/deploy-pages@v4
+    deploy:  
+    needs: build  # 等待build作业完成  
+    runs-on: ubuntu-latest  
+    name: Deploy to GitHub Pages  
+    steps:  
+      - name: Checkout  
+        uses: actions/checkout@v3  
+        with:  
+          ref: master  # 确保从正确的分支检出  
+  
+      - name: Deploy to GitHub Pages  
+        uses: JamesIves/github-pages-deploy-action@releases/v4  
+        with:  
+          branch: gh-pages  # 部署到的目标分支  
+          folder: docs/dist  # 要部署的文件夹（你的构建输出）
