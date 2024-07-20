@@ -62,7 +62,7 @@ jobs:
   #     - name: Deploy to GitHub Pages
   #       id: deployment
   #       uses: actions/deploy-pages@v4
-    deploy:  
+  deploy:  
     needs: build  # 等待build作业完成  
     runs-on: ubuntu-latest  
     name: Deploy to GitHub Pages  
