@@ -52,6 +52,7 @@ jobs:
         with:
           name: my-artifact
           path: docs/dist
+          overwrite: true
       - name: List directory contents  #列出目录
         run: ls /home/runner/work/hui_blog/hui_blog/docs
 
