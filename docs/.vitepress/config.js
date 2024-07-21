@@ -9,8 +9,8 @@ import {gitSidebar} from "./backend/gitSidebar";
  
 
 export default {
-	base: '/',
-	outDir: 'docs/dist',
+	base: '/hui_blog/',
+	outDir: 'dist',
 	title: '疾风浴雪的花园',
 	description: 'Talk is cheap, show me your code.',
 	themeConfig: {
