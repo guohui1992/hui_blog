@@ -48,10 +48,12 @@ jobs:
       - name: List directory contents  #列出目录
         run: ls /home/runner/work/hui_blog/hui_blog/docs
       - name: Upload artifact
-
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: my-artifact
           path: docs/dist
+      - name: List directory contents  #列出目录
+        run: ls /home/runner/work/hui_blog/hui_blog/docs
 
   deploy:  
     needs: build  # 等待build作业完成  
