@@ -72,10 +72,10 @@ jobs:
         with:  
           ref: master  # 确保从正确的分支检出  
   
+      - name: List directory contents  
+        run: ls -R /home/runner/work/hui_blog/ 
       - name: Deploy to GitHub Pages  
         uses: JamesIves/github-pages-deploy-action@releases/v4 
         with:  
           branch: gh-pages  # 部署到的目标分支  
           folder: docs/dist  # 要部署的文件夹（你的构建输出）
-      - name: List directory contents  
-        run: ls -R /home/runner/work/hui_blog/ 
