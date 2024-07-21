@@ -38,7 +38,7 @@ jobs:
         run: yarn docs:build  
   
       - name: Move build output to subdirectory  
-        run: mv docs/dist [hui_blog] 
+        run: mv docs/dist hui_blog
   
       # 使用官方的 GitHub Pages 部署 action  
       - name: Deploy  
@@ -47,5 +47,5 @@ jobs:
           branch: gh-pages # 部署分支，GitHub Pages 默认是 gh-pages  
           # folder: docs/dist # 构建输出的目录  
           # 如果你移动了构建输出到子目录，请修改这里的路径  
-          folder: [hui_blog] # 构建输出的目录  
+          folder: hui_blog # 构建输出的目录  
           clean: true # 在部署前清理 gh-pages 分支
