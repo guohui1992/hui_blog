@@ -13,8 +13,8 @@ hero:
       text:  Welcome!
       link: /colorfulLife/
     - theme: alt
-      text: Gittee
-      link: https://gitee.com/guohui.cn/hui-blog
+      text: Github
+      link: https://github.com/guohui1992/hui_blog
 features:
   - icon: 🧑🏼‍💻‍
     title: 内在丰盈者，独行亦如众

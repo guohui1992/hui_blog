@@ -9,7 +9,7 @@ import {gitSidebar} from "./backend/gitSidebar";
  
 
 export default {
-	base: '/',
+	base: '/hui_blog/',
 	outDir: 'dist',
 	title: '疾风浴雪的花园',
 	description: 'Talk is cheap, show me your code.',
@@ -51,7 +51,7 @@ export default {
 		},
 
 		socialLinks: [
-			{icon: 'github', link: 'https://gitee.com/guohui.cn/hui-blog'},
+			{icon: 'github', link: 'https://github.com/guohui1992/hui_blog'},
 		]
 
 	}
