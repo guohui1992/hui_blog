@@ -1,5 +1,5 @@
 export const frontendNav = {
-	text: '前端小食堂',
+	text: '前端',
 	activeMatch: 'frontend',
 	items:[
 		{
