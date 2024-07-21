@@ -50,7 +50,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: docs/.vitepress/dist
 
   deploy:  
     needs: build  # 等待build作业完成  
@@ -68,4 +68,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@releases/v4 
         with:  
           branch: master  # 部署到的目标分支  
-          folder: docs/dist  # 要部署的文件夹（你的构建输出）
+          folder:  docs/.vitepress/dist  # 要部署的文件夹（你的构建输出）
