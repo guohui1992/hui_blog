@@ -32,8 +32,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # 如果未启用 lastUpdated，则不需要
-      # - uses: pnpm/action-setup@v3 # 如果使用 pnpm，请取消注释
-      # - uses: oven-sh/setup-bun@v1 # 如果使用 Bun，请取消注释
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -47,36 +45,11 @@ jobs:
         run: yarn run docs:build
       - name: List directory contents  #列出目录
         run: ls /home/runner/work/hui_blog/hui_blog/docs
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: my-artifact
-      #     path: docs/dist
-      #     overwrite: true
-      # - name: List directory contents  #列出目录
-      #   run: ls /home/runner/work/hui_blog/hui_blog/docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/dist
 
-  # deploy:  
-  #   needs: build  # 等待build作业完成  
-  #   runs-on: ubuntu-latest  
-  #   name: Deploy to GitHub Pages  
-  #   steps:  
-  #     - name: Checkout  
-  #       uses: actions/checkout@v4
-  #       with:  
-  #         ref: master  # 确保从正确的分支检出  
-  #         fetch-depth: 0  # 获取完整的历史，包括 dist 目录
-  #     - name: List directory contents  #列出目录
-  #       run: ls -R /home/runner/work/hui_blog/hui_blog 
-  #     - name: Deploy to GitHub Pages  
-  #       uses: JamesIves/github-pages-deploy-action@releases/v4 
-  #       with:  
-  #         branch: master  # 部署到的目标分支  
-  #         folder:  docs/dist  # 要部署的文件夹（你的构建输出）
   # 部署工作
   deploy:
     environment:
