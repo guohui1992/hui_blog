@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Build with VitePress
-        run: yarn run docs:build
+        run: yarn build
       - name: List directory contents  #列出目录
         run: ls /home/runner/work/hui_blog/hui_blog/docs
       - name: Upload artifact
