@@ -1,5 +1,5 @@
 import { walk } from "../scripts/utils";
-const baseDir = './docs/backend/gitLearn/'
+const baseDir = './docs/views/backend/gitLearn/'
 export const gitSidebar = [
 	walk(baseDir,'基本配置'),
 	walk(baseDir,'常用命令'),

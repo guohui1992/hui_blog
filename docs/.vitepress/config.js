@@ -1,3 +1,4 @@
+import {htmlSidebar} from "./frontend/htmlSidebar";
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
 import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
 import { nginxSidebar } from "./backend/nginxSidebar";
@@ -6,7 +7,7 @@ import {bugSidebar} from "./bug/bugSiderbar";
 import {frontendNav} from "./frontend";
 import {backendNav} from "./backend";
 import {gitSidebar} from "./backend/gitSidebar";
- 
+
 
 export default {
 	base: '/hui_blog/',
@@ -38,10 +39,11 @@ export default {
 		],
 		sidebar: {
 			// 前端
+			'/views/frontend/html/': htmlSidebar,
 			// 后端
-			'/backend/nestjs/': nestjsSidebar,
-			'/backend/nginx/': nginxSidebar,
-			'/backend/gitLearn/': gitSidebar,
+			'/views/backend/nestjs/': nestjsSidebar,
+			'/views/backend/nginx/': nginxSidebar,
+			'/views/backend/gitLearn/': gitSidebar,
 			// 巨人的肩膀
 			'/bigMan/': bigManSidebar,
 			// bug集中营
