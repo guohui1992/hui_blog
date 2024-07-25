@@ -1,5 +1,6 @@
 import {htmlSidebar} from "./frontend/htmlSidebar";
 import {cssSidebar} from "./frontend/cssSidebar";
+import {skillSidebar} from "./soft_skill/skillSidebar";
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
 import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
 import { nginxSidebar } from "./backend/nginxSidebar";
@@ -25,18 +26,18 @@ export default {
 			},
 			frontendNav,
 			// backendNav,
-			// {
-			// 	text: '巨人的肩膀',
-			// 	link: '/bigMan/',
-			// },
+			{
+				text: '巨人的肩膀',
+				link: '/bigMan/',
+			},
 			// {
 			// 	text: 'bug集中营',
 			// 	link: '/bug/',
 			// },
-			// {
-			// 	text: '缤纷世界',
-			// 	link: '/colorfulLife/',
-			// },
+			{
+				text: '软实力',
+				link: '/soft_skill/',
+			},
 		],
 		sidebar: {
 			// 前端
@@ -51,7 +52,7 @@ export default {
 			// bug集中营
 			'/bug/': bugSidebar,
 			// 缤纷世界
-			'/colorfulLife/': colorfulSidebar,
+			'/views/soft_skill/': skillSidebar,
 		},
 
 		socialLinks: [
