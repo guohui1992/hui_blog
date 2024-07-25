@@ -1,6 +1,7 @@
 import {htmlSidebar} from "./frontend/htmlSidebar";
 import {cssSidebar} from "./frontend/cssSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
+
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
 import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
 import { nginxSidebar } from "./backend/nginxSidebar";
@@ -36,7 +37,7 @@ export default {
 			// },
 			{
 				text: '软实力',
-				link: '/soft_skill/',
+				link: '/views/soft_skill/index',
 			},
 		],
 		sidebar: {
