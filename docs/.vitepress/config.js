@@ -1,4 +1,5 @@
 import {htmlSidebar} from "./frontend/htmlSidebar";
+import {cssSidebar} from "./frontend/cssSidebar";
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
 import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
 import { nginxSidebar } from "./backend/nginxSidebar";
@@ -23,23 +24,24 @@ export default {
 				link: '/index',
 			},
 			frontendNav,
-			backendNav,
-			{
-				text: '巨人的肩膀',
-				link: '/bigMan/',
-			},
-			{
-				text: 'bug集中营',
-				link: '/bug/',
-			},
-			{
-				text: '缤纷世界',
-				link: '/colorfulLife/',
-			},
+			// backendNav,
+			// {
+			// 	text: '巨人的肩膀',
+			// 	link: '/bigMan/',
+			// },
+			// {
+			// 	text: 'bug集中营',
+			// 	link: '/bug/',
+			// },
+			// {
+			// 	text: '缤纷世界',
+			// 	link: '/colorfulLife/',
+			// },
 		],
 		sidebar: {
 			// 前端
 			'/views/frontend/html/': htmlSidebar,
+			'/views/frontend/css/': cssSidebar,
 			// 后端
 			'/views/backend/nestjs/': nestjsSidebar,
 			'/views/backend/nginx/': nginxSidebar,

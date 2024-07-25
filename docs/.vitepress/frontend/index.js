@@ -7,8 +7,8 @@ export const frontendNav = {
 			items:[
 				{text: 'Html', link:'/views/frontend/html/'},
 				{text: 'CSS', link:'/views/frontend/css/'},
-				{text: 'JavaScript', link:'/views/frontend/javascript/'},
-				{text: 'TypeScript', link:'/views/frontend/typescript/'},
+				// {text: 'JavaScript', link:'/views/frontend/javascript/'},
+				// {text: 'TypeScript', link:'/views/frontend/typescript/'},
 			]
 		},
 		{
@@ -18,11 +18,11 @@ export const frontendNav = {
 				{text: 'Vue', link:'/views/frontend/vue/'},
 			]
 		},
-		{
-			text: '丰富资源',
-			items:[
-				{text: '组件库', link:'/views/frontend/ui/'},
-			]
-		}
+		// {
+		// 	text: '丰富资源',
+		// 	items:[
+		// 		{text: '组件库', link:'/views/frontend/ui/'},
+		// 	]
+		// }
 	]
 }
