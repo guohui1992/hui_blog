@@ -57,7 +57,7 @@ export default {
 			'/tools/': toolsSidebar,
 			'/sec/': secSidebar,
 			'/devOps/': devopsSidebar,
-			// 缤纷世界
+			// 软实力
 			'/views/soft_skill/': skillSidebar,
 		},
 
