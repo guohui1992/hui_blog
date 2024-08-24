@@ -5,8 +5,9 @@ import {skillSidebar} from "./soft_skill/skillSidebar";
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
 import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
 import { nginxSidebar } from "./backend/nginxSidebar";
-import {bigManSidebar} from "./bigMan/bigManSiderbar";
-import {bugSidebar} from "./bug/bugSiderbar";
+import {toolsSidebar} from "./tools/toolsSiderbar";
+import {secSidebar} from "./security/secSiderbar";
+import {devopsSidebar} from "./devops/devopsSiderbar";
 import {frontendNav} from "./frontend";
 import {backendNav} from "./backend";
 import {gitSidebar} from "./backend/gitSidebar";
@@ -26,15 +27,19 @@ export default {
 				link: '/index',
 			},
 			frontendNav,
-			// backendNav,
+			backendNav,
 			{
-				text: '巨人的肩膀',
-				link: '/bigMan/',
+				text: '工具',
+				link: '/tools/',
 			},
-			// {
-			// 	text: 'bug集中营',
-			// 	link: '/bug/',
-			// },
+			{
+				text: '安全学',
+				link: '/sec/',
+			},
+			{
+				text: '运维学',
+				link: '/devOps/',
+			},
 			{
 				text: '软实力',
 				link: '/views/soft_skill/index',
@@ -48,10 +53,10 @@ export default {
 			'/views/backend/nestjs/': nestjsSidebar,
 			'/views/backend/nginx/': nginxSidebar,
 			'/views/backend/gitLearn/': gitSidebar,
-			// 巨人的肩膀
-			'/bigMan/': bigManSidebar,
-			// bug集中营
-			'/bug/': bugSidebar,
+			// 工具
+			'/tools/': toolsSidebar,
+			'/sec/': secSidebar,
+			'/devOps/': devopsSidebar,
 			// 缤纷世界
 			'/views/soft_skill/': skillSidebar,
 		},
