@@ -3,7 +3,7 @@ import {cssSidebar} from "./frontend/cssSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
 
 import {nestjsSidebar} from "./backend/nestjsSiderbar";
-import {colorfulSidebar} from "./colorfulLife/colorfulSiderbar";
+import {rustSidebar} from "./backend/rustSidebar";
 import { nginxSidebar } from "./backend/nginxSidebar";
 import {toolsSidebar} from "./tools/toolsSiderbar";
 import {secSidebar} from "./security/secSiderbar";
@@ -53,6 +53,7 @@ export default {
 			'/views/backend/nestjs/': nestjsSidebar,
 			'/views/backend/nginx/': nginxSidebar,
 			'/views/backend/gitLearn/': gitSidebar,
+			'/views/backend/rust/': rustSidebar,
 			// 工具
 			'/tools/': toolsSidebar,
 			'/sec/': secSidebar,
