@@ -11,7 +11,6 @@ Rust 官方的入门书籍
 这个文档也来自官方，中文被翻译为《通过例子学 Rust》。基本上也是必看的文档。该书通过一些 Rust 示例来学习和了解 Rust，适合喜欢实践的学习者。
 
 4. [Comprehensive Rust](https://google.github.io/comprehensive-rust/zh-CN/index.html)
-
 这是一个免费的 Rust 课程，由 Google 的 Android 团队推出。该课程涵盖了 Rust 的全部内容，从基础到高级，建议有一点 Rust 基础再看此教程。
 
 5. [Rustlings](https://github.com/rust-lang/rustlings)
