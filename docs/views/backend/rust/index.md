@@ -13,6 +13,7 @@ Rust 官方的入门书籍
 4. [Comprehensive Rust](https://google.github.io/comprehensive-rust/zh-CN/index.html)
 
 这是一个免费的 Rust 课程，由 Google 的 Android 团队推出。该课程涵盖了 Rust 的全部内容，从基础到高级，建议有一点 Rust 基础再看此教程。
+
 5. [Rustlings](https://github.com/rust-lang/rustlings)
 这里面包含一系列的小练习，涵盖了 Rust 的基本概念和一些进阶主题。每个练习都包含一个代码文件，学习者需要完成或修复代码，让代码通过编译和测试。通过这些实践，可以加深对 Rust 语法和概念的理解。Rustlings 适合各种水平的学习者，特别是那些希望通过实践来加深对 Rust 语言理解的小伙伴。
 
