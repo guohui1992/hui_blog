@@ -2,15 +2,16 @@ import {htmlSidebar} from "./frontend/htmlSidebar";
 import {cssSidebar} from "./frontend/cssSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
 
-import {nestjsSidebar} from "./backend/nestjsSiderbar";
+import {nestjsSidebar} from "./backend/nestjsSidebar";
 import {rustSidebar} from "./backend/rustSidebar";
 import { nginxSidebar } from "./backend/nginxSidebar";
-import {toolsSidebar} from "./tools/toolsSiderbar";
-import {secSidebar} from "./security/secSiderbar";
-import {devopsSidebar} from "./devops/devopsSiderbar";
+import {toolsSidebar} from "./tools/toolsSidebar";
+import {secSidebar} from "./security/secSidebar";
+import {devopsSidebar} from "./devops/devopsSidebar";
 import {frontendNav} from "./frontend";
 import {backendNav} from "./backend";
 import {gitSidebar} from "./backend/gitSidebar";
+import {recordSidebar} from "./records/recordSidebar";
 
 
 export default {
@@ -30,19 +31,23 @@ export default {
 			backendNav,
 			{
 				text: '工具',
-				link: '/tools/',
+				link: '/views/tools/',
 			},
 			{
 				text: '安全学',
-				link: '/sec/',
+				link: '/views/sec/index',
 			},
 			{
 				text: '运维学',
-				link: '/devOps/',
+				link: '/views/devOps/',
 			},
 			{
 				text: '软实力',
 				link: '/views/soft_skill/index',
+			},
+			{
+				text: '杂记',
+				link: '/views/records/index',
 			},
 		],
 		sidebar: {
@@ -55,11 +60,13 @@ export default {
 			'/views/backend/gitLearn/': gitSidebar,
 			'/views/backend/rust/': rustSidebar,
 			// 工具
-			'/tools/': toolsSidebar,
-			'/sec/': secSidebar,
-			'/devOps/': devopsSidebar,
+			'/views/tools/': toolsSidebar,
+			'/views/sec/': secSidebar,
+			'/views/devOps/': devopsSidebar,
 			// 软实力
 			'/views/soft_skill/': skillSidebar,
+			// 杂记
+			'/views/records/': recordSidebar,
 		},
 
 		socialLinks: [

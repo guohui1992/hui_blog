@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text:  Welcome!
-      link: /colorfulLife/
+      link: /views/colorfulLife/
     - theme: alt
       text: Github
       link: https://github.com/guohui1992/hui_blog
