@@ -31,7 +31,7 @@ export default {
 			backendNav,
 			{
 				text: '工具',
-				link: '/views/tools/',
+				link: '/views/tools/index',
 			},
 			{
 				text: '安全学',
@@ -39,7 +39,7 @@ export default {
 			},
 			{
 				text: '运维学',
-				link: '/views/devOps/',
+				link: '/views/devOps/index',
 			},
 			{
 				text: '软实力',
