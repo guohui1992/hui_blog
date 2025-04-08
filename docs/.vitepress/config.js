@@ -1,6 +1,7 @@
 import {htmlSidebar} from "./frontend/htmlSidebar";
 import {cssSidebar} from "./frontend/cssSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
+import {internalSkillSidebar} from "./internal_skill/skillSidebar";
 
 import {nestjsSidebar} from "./backend/nestjsSidebar";
 import {rustSidebar} from "./backend/rustSidebar";
@@ -46,9 +47,14 @@ export default {
 				link: '/views/soft_skill/index',
 			},
 			{
+				text: '个人内功',
+				link: '/views/internal_skill/index',
+			},
+			{
 				text: '杂记',
 				link: '/views/records/index',
 			},
+			
 		],
 		sidebar: {
 			// 前端
@@ -65,6 +71,8 @@ export default {
 			'/views/devOps/': devopsSidebar,
 			// 软实力
 			'/views/soft_skill/': skillSidebar,
+			// 个人内功
+			'/views/internal_skill/': internalSkillSidebar,
 			// 杂记
 			'/views/records/': recordSidebar,
 		},
