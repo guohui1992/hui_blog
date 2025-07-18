@@ -43,14 +43,14 @@ npm install -g ts-node
 
 含义
 
-| 包名                     | 介绍                                                         |
+| 包名 | 介绍 |
 | ------------------------ | ------------------------------------------------------------ |
-| @nestjs/core             | NestJS 框架的核心模块，提供构建、启动和管理 NestJS 应用程序的基础设施。 |
-| @nestjs/common           | 包含构建 NestJS 应用的基础设施和常用装饰器、工具类、接口等，用于定义控制器、服务、中间件、守卫、拦截器、管道、异常过滤器等。 |
-| rxjs                     | 用于构建异步和事件驱动程序的库，基于可观察序列的概念，提供强大的功能来处理异步数据流。 |
-| reflect-metadata         | 在 JavaScript 和 TypeScript 中实现元编程的库，通过提供元数据反射 API，允许在运行时检查和操作对象的元数据。 |
+| @nestjs/core | NestJS 框架的核心模块，提供构建、启动和管理 NestJS 应用程序的基础设施。 |
+| @nestjs/common | 包含构建 NestJS 应用的基础设施和常用装饰器、工具类、接口等，用于定义控制器、服务、中间件、守卫、拦截器、管道、异常过滤器等。 |
+| rxjs | 用于构建异步和事件驱动程序的库，基于可观察序列的概念，提供强大的功能来处理异步数据流。 |
+| reflect-metadata | 在 JavaScript 和 TypeScript 中实现元编程的库，通过提供元数据反射 API，允许在运行时检查和操作对象的元数据。 |
 | @nestjs/platform-express | NestJS 的平台适配器，用于将 NestJS 应用与 Express.js 集成，提供 Express.js 的中间件、路由等功能，并享受 NestJS 的模块化、依赖注入等高级特性。 |
-| ts-node                  | 是一个用于直接执行 TypeScript 代码的 Node.js 实现，它允许开发者在不预先编译的情况下运行 TypeScript 文件 |
+| ts-node | 是一个用于直接执行 TypeScript 代码的 Node.js 实现，它允许开发者在不预先编译的情况下运行 TypeScript 文件 |
 
 ### 2.2 src/main.ts
 
@@ -169,25 +169,25 @@ export class AppController {
 
 含义：
 
-| 选项名                             | 选项介绍                                                     |
+| 选项名 | 选项介绍 |
 | ---------------------------------- | ------------------------------------------------------------ |
-| `module`                           | 指定生成的模块代码的模块系统，`commonjs` 是 Node.js 的模块系统。 |
-| `declaration`                      | 生成 `.d.ts` 声明文件。                                      |
-| `removeComments`                   | 删除编译后的注释。                                           |
-| `emitDecoratorMetadata`            | 为装饰器生成元数据。                                         |
-| `experimentalDecorators`           | 启用实验性的装饰器特性。                                     |
-| `esModuleInterop`                  | 允许从没有默认导出的模块中默认导入。这对于兼容性模块非常有用。 |
-| `target`                           | 指定 ECMAScript 目标版本，`ES2021` 是一种现代的 JavaScript 版本。 |
-| `sourceMap`                        | 生成对应的 `.map` 文件。                                     |
-| `outDir`                           | 指定编译输出目录为 `./dist`。                                |
-| `baseUrl`                          | 设置解析非相对模块名的基准目录为 `./`。                      |
-| `incremental`                      | 启用增量编译，提升编译速度。                                 |
-| `skipLibCheck`                     | 跳过对所有声明文件的类型检查。                               |
-| `strictNullChecks`                 | 启用严格的空值检查。                                         |
-| `noImplicitAny`                    | 禁止隐式 `any` 类型。                                        |
-| `strictBindCallApply`              | 启用严格的 `bind`、`call` 和 `apply` 方法检查。              |
-| `forceConsistentCasingInFileNames` | 强制文件名大小写一致。                                       |
-| `noFallthroughCasesInSwitch`       | 禁止 switch 语句中的 case 语句贯穿（fall through）。         |
+| `module` | 指定生成的模块代码的模块系统，`commonjs` 是 Node.js 的模块系统。 |
+| `declaration` | 生成 `.d.ts` 声明文件。 |
+| `removeComments` | 删除编译后的注释。 |
+| `emitDecoratorMetadata` | 为装饰器生成元数据。 |
+| `experimentalDecorators` | 启用实验性的装饰器特性。 |
+| `esModuleInterop` | 允许从没有默认导出的模块中默认导入。这对于兼容性模块非常有用。 |
+| `target` | 指定 ECMAScript 目标版本，`ES2021` 是一种现代的 JavaScript 版本。 |
+| `sourceMap` | 生成对应的 `.map` 文件。 |
+| `outDir` | 指定编译输出目录为 `./dist`。 |
+| `baseUrl` | 设置解析非相对模块名的基准目录为 `./`。 |
+| `incremental` | 启用增量编译，提升编译速度。 |
+| `skipLibCheck` | 跳过对所有声明文件的类型检查。 |
+| `strictNullChecks` | 启用严格的空值检查。 |
+| `noImplicitAny` | 禁止隐式 `any` 类型。 |
+| `strictBindCallApply` | 启用严格的 `bind`、`call` 和 `apply` 方法检查。 |
+| `forceConsistentCasingInFileNames` | 强制文件名大小写一致。 |
+| `noFallthroughCasesInSwitch` | 禁止 switch 语句中的 case 语句贯穿（fall through）。 |
 
 ## 参考
 
@@ -199,17 +199,15 @@ ts-node 是一个用于直接执行TypeScript 代码的Nodejs 实现，它允许
 
 **1.即时编译和执行**
 
-+ ts-node 在运行时即时编译ts代码，并将其传递给Nodejs执行，避免了需要先手动编译ts代码为js的步骤。
+- ts-node 在运行时即时编译ts代码，并将其传递给Nodejs执行，避免了需要先手动编译ts代码为js的步骤。
 
 **2.REPL环境**
 
-+ 提供一个REPL（Read-Eval-Print Loop）环境，可以在其中直接输入和执行ts代码，类似与Nodejs REPL。
+- 提供一个REPL（Read-Eval-Print Loop）环境，可以在其中直接输入和执行ts代码，类似与Nodejs REPL。
 
 **3.集成TypeScript配置**
 
-+ ts-node 可以读取和使用项目中的tsconfig.json 配置文件，以确保代码按照指定的 TypeScript 编译选项执行。
-
-
+- ts-node 可以读取和使用项目中的tsconfig.json 配置文件，以确保代码按照指定的 TypeScript 编译选项执行。
 
 **安装**
 
@@ -1190,7 +1188,7 @@ bootstrap();
 
 1. **模块装饰器 (@Module)**：
    - 用于标记一个类为 NestJS 模块，并提供模块的元数据。
-2. **模块元数据**：
+1. **模块元数据**：
    - `imports`: 导入的模块列表，这些模块的提供者可以在当前模块中使用。
    - `controllers`: 当前模块定义的控制器。
    - `providers`: 当前模块定义的提供者（服务等），这些提供者可以注入到模块的其他组件中。
@@ -1702,10 +1700,3 @@ console.log(commonjs_module_1.default.foo); // 正确，因为 `__importDefault`
   - `esModuleInterop` 不仅允许使用默认导入语法，还会调整编译输出，使其与 ES6 模块行为一致，并包含了 `allowSyntheticDefaultImports` 的功能。
 
 在现代 TypeScript 项目中，通常推荐启用 `esModuleInterop`，以便更好地支持模块互操作，并使编译后的代码更符合 ES6 模块规范。
-
-
-
-
-
-
-
