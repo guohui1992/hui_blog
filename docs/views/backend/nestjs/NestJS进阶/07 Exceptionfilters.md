@@ -1,0 +1,1470 @@
+## 1.全局异常过滤器
++ Nest 内置了一个异常层，负责处理应用程序中所有未处理的异常。当应用程序代码未处理异常时，此层会捕获该异常，然后自动发送适当的用户友好响应。
+![alt text](image-4.png)
+### 1.1 main.ts
+src\main.ts
+```js
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from './app.module';
+import session from 'express-session';
+async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    app.use(session({
+        secret: 'your-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24
+        }
+    }));
+    await app.listen(3000);
+}
+bootstrap();
+```
+### 1.2 app.module.ts
+src\app.module.ts
+```js
+import { Module } from "@nestjs/common";
+import { AppController } from './app.controller';
+@Module({
+    controllers: [AppController],
+})
+export class AppModule { }
+```
+### 1.3 app.controller.ts
+src\app.controller.ts
+```js
+import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+@Controller()
+export class AppController {
+    @Get('exception')
+    exception() {
+        //throw new Error('exception');
+        //throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new HttpException({
+            status: HttpStatus.FORBIDDEN,
+            error: 'This is a custom message',
+        }, HttpStatus.FORBIDDEN);
+    }
+}
+```
+### 1.4 common\index.ts
+src\@nestjs\common\index.ts
+```js
+export * from './module.decorator'
+export * from './controller.decorator';
+export * from './http-methods.decorator';
+export * from './param.decorator';
+export * from './injectable.decorator';
+export * from './inject.decorator';
+export * from './constants';
+export * from './request.method.enum';
+export * from './middleware.interface';
+export * from './nest-module.interface';
+export * from './middleware-consumer.interface';
++export * from './arguments-host.interface';
++export * from './catch.decorator';
++export * from './exception-filter.interface';
++export * from './http-exception.filter';
++export * from './http-methods.decorator';
++export * from './http-exception';
++export * from './http-status.enum';
+```
+### 1.5 arguments-host.interface.ts
+src\@nestjs\common\arguments-host.interface.ts
+```js
+export interface ArgumentsHost {
+    switchToHttp(): {
+        getRequest<T = any>(): T;
+        getResponse<T = any>(): T;
+        getNext<T = any>(): T;
+    };
+}
+```
+### 1.6 catch.decorator.ts
+src\@nestjs\common\catch.decorator.ts
+```js
+import 'reflect-metadata';
+export function Catch(...exceptions: any[]): ClassDecorator {
+  return (target: Function) => {
+    Reflect.defineMetadata('catch', exceptions, target);
+  };
+}
+```
+### 1.7 exception-filter.interface.ts
+src\@nestjs\common\exception-filter.interface.ts
+```js
+import { ArgumentsHost } from './arguments-host.interface';
+export interface ExceptionFilter<T = any> {
+  catch(exception: T, host: ArgumentsHost): any;
+}
+1.8 http-exception.filter.ts
+src\@nestjs\common\http-exception.filter.ts
+
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException,HttpStatus } from '@nestjs/common';
+import { Request, Response } from 'express';
+
+@Catch()
+export class GlobalHttpExceptionFilter implements ExceptionFilter {
+  catch(exception: Error, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const exceptionStatus = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+    const exceptionResponse = exception instanceof HttpException ? exception.getResponse() : 'Internal server error';
+    if(typeof exceptionResponse === 'string'){
+      return response.status(exceptionStatus).json({
+        statusCode: exceptionStatus,
+        message: exceptionResponse,
+      });
+    }else{
+      return response.status(exceptionStatus).json(exceptionResponse);
+    }
+  }
+}
+```
+### 1.9 http-exception.ts
+src\@nestjs\common\http-exception.ts
+```js
+import { HttpStatus } from './http-status.enum';
+export class HttpException extends Error {
+    private readonly response: string | object;
+    private readonly status: HttpStatus;
+
+    constructor(response: string | object, status: HttpStatus) {
+        super();
+        this.response = response;
+        this.status = status;
+    }
+
+    getResponse(): string | object {
+        return this.response;
+    }
+
+    getStatus(): HttpStatus {
+        return this.status;
+    }
+}
+export class BadRequestException extends HttpException {
+    constructor(message: string, error?: string) {
+        super({ message, error, statusCode: HttpStatus.BAD_REQUEST }, HttpStatus.BAD_REQUEST);
+    }
+}
+export class ForbiddenException extends HttpException {
+    constructor(message: string, error: string = 'Forbidden') {
+        super({ message, error, statusCode: HttpStatus.FORBIDDEN }, HttpStatus.FORBIDDEN);
+    }
+}
+export class BadGatewayException extends HttpException {
+    constructor() {
+        super('Bad Gateway', HttpStatus.BAD_GATEWAY);
+    }
+}
+export class RequestTimeoutException extends HttpException {
+    constructor() {
+        super('Request Timeout', HttpStatus.REQUEST_TIMEOUT);
+    }
+}
+```
+### 1.10 http-status.enum.ts
+src\@nestjs\common\http-status.enum.ts
+```js
+export enum HttpStatus {
+    OK = 200,
+    CREATED = 201,
+    ACCEPTED = 202,
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    UNAUTHORIZED = 401,
+    FORBIDDEN = 403,
+    NOT_FOUND = 404,
+    INTERNAL_SERVER_ERROR = 500,
+    BAD_GATEWAY = 502,
+    REQUEST_TIMEOUT = 408,
+}
+```
+### 1.11 nest-application.ts
+src\@nestjs\core\nest-application.ts
+```js
+import 'reflect-metadata';
+import express, { Express, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express'
+import { Logger } from "./logger";
+import path from 'path'
++import { RequestMethod, GlobalHttpExceptionFilter, ArgumentsHost, ExceptionFilter } from '@nestjs/common'
+import { INJECTED_TOKENS, DESIGN_PARAMTYPES } from '../common/constants'
+import { defineModule } from '../common/module.decorator';
+export class NestApplication {
+    private readonly app: Express = express()
+    private readonly providerInstances = new Map()
+    private readonly globalProviders = new Set()
+    private readonly moduleProviers = new Map()
+    private readonly middlewares = []
+    private readonly excludedRoutes = []
++   private readonly defaultGlobalHttpExceptionFilter = new GlobalHttpExceptionFilter()
+    constructor(protected readonly module) {
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+    }
+    exclude(...routeInfos): this {
+        this.excludedRoutes.push(...routeInfos.map(this.normalizeRouteInfo));
+        return this;
+    }
+    initMiddlewares() {
+        this.module.prototype.configure?.(this);
+    }
+    apply(...middleware) {
+        defineModule(this.module, middleware)
+        this.middlewares.push(...middleware);
+        return this;
+    }
+    getMiddelwareInstance(middleware) {
+        if (middleware instanceof Function) {
+            const dependencies = this.resolveDependencies(middleware);
+            return new middleware(...dependencies);
+        }
+        return middleware;
+    }
+    isExcluded(reqPath: string, method: RequestMethod) {
+        return this.excludedRoutes.some(routeInfo => {
+            const { routePath, routeMethod } = routeInfo;
+            return routePath === reqPath && (routeMethod === RequestMethod.ALL || routeMethod === method)
+        });
+    }
+    forRoutes(...routes) {
+        for (const route of routes) {
+            for (const middleware of this.middlewares) {
+                const { routePath, routeMethod } = this.normalizeRouteInfo(route);
+                this.app.use(routePath, (req, res, next) => {
+                    if (this.isExcluded(req.originalUrl, req.method)) {
+                        return next();
+                    }
+                    if (routeMethod === RequestMethod.ALL || routeMethod === req.method) {
+                        if ('use' in middleware.prototype || 'use' in middleware) {
+                            const middlewareInstance = this.getMiddelwareInstance(middleware);
+                            middlewareInstance.use(req, res, next);
+                        } else if (middleware instanceof Function) {
+                            middleware(req, res, next);
+                        } else {
+                            next();
+                        }
+                    } else {
+                        next();
+                    }
+                });
+            }
+        }
+        return this;
+    }
+    private normalizeRouteInfo(route) {
+        let routePath = '';
+        let routeMethod = RequestMethod.ALL;
+        if (typeof route === 'string') {
+            routePath = route;
+        } else if ('path' in route) {
+            routePath = route.path;
+            routeMethod = route.method ?? RequestMethod.ALL;
+        } else if (route instanceof Function) {
+            routePath = Reflect.getMetadata('prefix', route);
+        }
+        routePath = path.posix.join('/', routePath);
+        return { routePath, routeMethod }
+    }
+    async initProviders() {
+        const imports = Reflect.getMetadata('imports', this.module) ?? [];
+        for (const importModule of imports) {
+            let importedModule = importModule;
+            if (importModule instanceof Promise) {
+                importedModule = await importedModule;
+            }
+            if ('module' in importedModule) {
+                const { module, providers, controllers, exports } = importedModule;
+                const oldControllers = Reflect.getMetadata('controllers', module)
+                const newControllers = [...(oldControllers ?? []), ...(controllers ?? [])];
+                defineModule(module, newControllers);
+                const oldProviders = Reflect.getMetadata('providers', module)
+                const newProviders = [...(oldProviders ?? []), ...(providers ?? [])];
+                defineModule(module, newProviders);
+                const oldExports = Reflect.getMetadata('exports', module)
+                const newExports = [...(oldExports ?? []), ...(exports ?? [])];
+                Reflect.defineMetadata('controllers', newControllers, module)
+                Reflect.defineMetadata('providers', newProviders, module)
+                Reflect.defineMetadata('exports', newExports, module)
+                this.registerProvidersFromModule(module, this.module);
+            } else {
+                this.registerProvidersFromModule(importedModule, this.module);
+            }
+        }
+        const providers = Reflect.getMetadata('providers', this.module) ?? [];
+        for (const provider of providers) {
+            this.addProvider(provider, this.module);
+        }
+    }
+    private registerProvidersFromModule(module, ...parentModules) {
+        const global = Reflect.getMetadata('global', module);
+        const importedProviders = Reflect.getMetadata('providers', module) ?? [];
+        const exports = Reflect.getMetadata('exports', module) ?? [];
+        for (const exportToken of exports) {
+            if (this.isModule(exportToken)) {
+                this.registerProvidersFromModule(exportToken, module, ...parentModules);
+            } else {
+                const provider = importedProviders.find(provider => provider === exportToken || provider.provide == exportToken);
+                if (provider) {
+                    [module, ...parentModules].forEach(module => {
+                        this.addProvider(provider, module, global);
+                    });
+                }
+            }
+        }
+    }
+    private isModule(exportToken) {
+        return exportToken && exportToken instanceof Function && Reflect.getMetadata('isModule', exportToken);
+    }
+    addProvider(provider, module, global = false) {
+        const providers = global ? this.globalProviders : (this.moduleProviers.get(module) || new Set());
+        if (!this.moduleProviers.has(module)) {
+            this.moduleProviers.set(module, providers);
+        }
+        const injectToken = provider.provide ?? provider;
+        if (this.providerInstances.has(injectToken)) {
+            if (!providers.has(injectToken)) {
+                providers.add(injectToken);
+            }
+            return;
+        }
+        if (provider.provide && provider.useClass) {
+            const Clazz = provider.useClass;
+            const dependencies = this.resolveDependencies(Clazz);
+            const value = new Clazz(...dependencies);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useValue) {
+            this.providerInstances.set(provider.provide, provider.useValue);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useFactory) {
+            const inject = provider.inject ?? [];
+            const injectedValues = inject.map(injectToken => this.getProviderByToken(injectToken, module));
+            const value = provider.useFactory(...injectedValues);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else {
+            const dependencies = this.resolveDependencies(provider);
+            const value = new provider(...dependencies);
+            this.providerInstances.set(provider, value);
+            providers.add(provider);
+        }
+    }
+    use(middleware) {
+        this.app.use(middleware);
+    }
+    private getProviderByToken = (injectedToken, module) => {
+        if (this.moduleProviers.get(module)?.has(injectedToken) || this.globalProviders.has(injectedToken)) {
+            return this.providerInstances.get(injectedToken);
+        } else {
+            return null;
+        }
+    }
+    private resolveDependencies(Clazz) {
+        const injectedTokens = Reflect.getMetadata(INJECTED_TOKENS, Clazz) ?? [];
+        const constructorParams = Reflect.getMetadata(DESIGN_PARAMTYPES, Clazz) ?? [];
+        return constructorParams.map((param, index) => {
+            const module = Reflect.getMetadata('module', Clazz);
+            return this.getProviderByToken(injectedTokens[index] ?? param, module);
+        });
+    }
+    async init() {
+        const controllers = Reflect.getMetadata('controllers', this.module) || [];
+        Logger.log(`AppModule dependencies initialized`, 'InstanceLoader');
+        for (const Controller of controllers) {
+            const dependencies = this.resolveDependencies(Controller);
+            const controller = new Controller(...dependencies);
+            const prefix = Reflect.getMetadata('prefix', Controller) || '/';
+            Logger.log(`${Controller.name} {${prefix}}`, 'RoutesResolver');
+            const controllerPrototype = Controller.prototype;
+            for (const methodName of Object.getOwnPropertyNames(controllerPrototype)) {
+                const method = controllerPrototype[methodName];
+                const httpMethod = Reflect.getMetadata('method', method);
+                const pathMetadata = Reflect.getMetadata('path', method);
+                const redirectUrl = Reflect.getMetadata('redirectUrl', method);
+                const redirectStatusCode = Reflect.getMetadata('redirectStatusCode', method);
+                const statusCode = Reflect.getMetadata('statusCode', method);
+                const headers = Reflect.getMetadata('headers', method) ?? [];
+                if (!httpMethod) continue;
+                const routePath = path.posix.join('/', prefix, pathMetadata)
+                this.app[httpMethod.toLowerCase()](routePath, async (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
++                   const host: ArgumentsHost = {
++                       switchToHttp: () => ({
++                           getRequest: () => req,
++                           getResponse: () => res,
++                           getNext: () => next,
++                       }),
++                   };
++                   try {
+                        const args = this.resolveParams(controller, methodName, req, res, next);
+                        const result = await method.call(controller, ...args);
+                        if (result?.url) {
+                            return res.redirect(result.statusCode || 302, result.url);
+                        }
+                        if (redirectUrl) {
+                            return res.redirect(redirectStatusCode || 302, redirectUrl);
+                        }
+                        if (statusCode) {
+                            res.statusCode = statusCode;
+                        } else if (httpMethod === 'POST') {
+                            res.statusCode = 201;
+                        }
+                        const responseMetadata = this.getResponseMetadata(controller, methodName);
+                        if (!responseMetadata || (responseMetadata?.data?.passthrough)) {
+                            headers.forEach(({ name, value }) => {
+                                res.setHeader(name, value);
+                            });
+                            res.send(result);
+                        }
++                   } catch (error) {
++                       await this.callExceptionFilters(error, host);
++                   }
+                })
+                Logger.log(`Mapped {${routePath}, ${httpMethod}} route`, 'RoutesResolver');
+            }
+        }
+        Logger.log(`Nest application successfully started`, 'NestApplication');
+    }
+    private getResponseMetadata(controller, methodName) {
+        const paramsMetaData = Reflect.getMetadata(`params`, controller, methodName) ?? [];
+        return paramsMetaData.filter(Boolean).find((param) =>
+            param.key === 'Response' || param.key === 'Res' || param.key === 'Next');
+    }
+    private resolveParams(instance: any, methodName: string, req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
+        const paramsMetaData = Reflect.getMetadata(`params`, instance, methodName) ?? [];
+        return paramsMetaData.map((paramMetaData) => {
+            const { key, data, factory } = paramMetaData;
+            const ctx = {
+                swithToHttp: () => ({
+                    getRequest: () => req,
+                    getResponse: () => req,
+                    getNext: () => next,
+                })
+            }
+            switch (key) {
+                case "Request":
+                case "Req":
+                    return req;
+                case "Query":
+                    return data ? req.query[data] : req.query;
+                case "Headers":
+                    return data ? req.headers[data] : req.headers;
+                case 'Session':
+                    return data ? req.session[data] : req.session;
+                case 'Ip':
+                    return req.ip;
+                case 'Param':
+                    return data ? req.params[data] : req.params;
+                case 'Body':
+                    return data ? req.body[data] : req.body;
+                case "Response":
+                case "Res":
+                    return res;
+                case "Next":
+                    return next;
+                case "DecoratorFactory":
+                    return factory(data, ctx);
+                default:
+                    return null;
+            }
+        })
+    }
++   private async callExceptionFilters(error: any, host: ArgumentsHost) {
++       const allFilters = [this.defaultGlobalHttpExceptionFilter];
++       for (const filter of allFilters) {
++           const target = filter.constructor;
++           const exceptions = Reflect.getMetadata('catch', target) || [];
++           if (exceptions.length == 0 || exceptions.some((exception: any) => error instanceof exception)) {
++               filter.catch(error, host);
++               break;
++           }
++       }
++   }
+    async listen(port) {
+        await this.initProviders();
+        await this.initMiddlewares();
+        await this.init();
+        this.app.listen(port, () => {
+            Logger.log(`Application is running on http://localhost:${port}`, 'NestApplication');
+        });
+    }
+}
+```
+
+## 2.自定义异常
+### 2.1 app.controller.ts
+src\app.controller.ts
+```js
+import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import { ForbiddenException } from './forbidden.exception';
+@Controller()
+export class AppController {
+    @Get('exception')
+    exception() {
+        //throw new Error('exception');
+        //throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new HttpException({
+            status: HttpStatus.FORBIDDEN,
+            error: 'This is a custom message',
+        }, HttpStatus.FORBIDDEN);
+    }
++   @Get('custom')
++   custom() {
++       throw new ForbiddenException();
++   }
+}
+```
+### 2.2 forbidden.exception.ts
+src\forbidden.exception.ts
+```js
+import { HttpException, HttpStatus } from "@nestjs/common";
+export class ForbiddenException extends HttpException {
+    constructor() {
+        super('Forbidden', HttpStatus.FORBIDDEN);
+    }
+}
+```
+## 3.内置HTTP异常
+| 类名 | 类的介绍 |
+|------|----------|
+| BadRequestException | 表示请求无效的异常，通常用于处理客户端发送的无效或错误请求。 |
+| UnauthorizedException | 表示未经授权的异常，用于处理需要身份验证的请求，但客户端未提供有效的身份验证凭证。 |
+| NotFoundException | 表示资源未找到的异常，用于处理请求的资源在服务器上不存在的情况。 |
+| ForbiddenException | 表示禁止访问的异常，用于处理客户端没有权限访问请求的资源的情况。 |
+| NotAcceptableException | 表示不可接受的异常，用于处理请求的资源无法满足客户端的请求头中的接受条件的情况。 |
+| RequestTimeoutException | 表示请求超时的异常，用于处理客户端在规定时间内未能发送完整请求的情况。 |
+| ConflictException | 表示请求冲突的异常，用于处理请求的资源与服务器上的当前状态冲突的情况。 |
+| GoneException | 表示资源已被永久移除的异常，用于处理请求的资源在服务器上已永久删除的情况。 |
+| HttpVersionNotSupportedException | 表示HTTP版本不支持的异常，用于处理客户端使用了服务器不支持的HTTP协议版本的情况。 |
+| PayloadTooLargeException | 表示请求负载过大的异常，用于处理客户端发送的请求负载超过服务器能够处理的大小限制的情况。 |
+| UnsupportedMediaTypeException | 表示不支持的媒体类型异常，用于处理客户端发送的请求包含服务器无法处理的媒体类型的情况。 |
+| UnprocessableEntityException | 表示无法处理的实体异常，用于处理服务器理解请求内容但无法处理其语义的情况。 |
+| InternalServerErrorException | 表示内部服务器错误的异常，用于处理服务器在处理请求时遇到未预见的情况。 |
+| NotImplementedException | 表示未实现的异常，用于处理客户端请求的方法在服务器上未实现的情况。 |
+| ImATeapotException | 一个愚蠢的异常，用于处理服务器被要求使用在418状态码中定义的茶壶（I'm a teapot）响应。 |
+| MethodNotAllowedException | 表示方法不允许的异常，用于处理客户端使用不被允许的方法访问资源的情况。 |
+| BadGatewayException | 表示网关错误的异常，用于处理服务器作为网关或代理，从上游服务器收到无效响应的情况。 |
+| ServiceUnavailableException | 表示服务不可用的异常，用于处理服务器暂时无法处理请求的情况，通常是由于服务器过载或正在维护。 |
+| GatewayTimeoutException | 表示网关超时的异常，用于处理服务器作为网关或代理，在等待上游服务器响应时超时的情况。 |
+| PreconditionFailedException | 表示前提条件失败的异常，用于处理客户端发送的请求无法满足服务器的前提条件的情况。 |
+
+### 3.1 app.controller.ts
+src\app.controller.ts
+```js
++import { Controller, Get, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { ForbiddenException } from './forbidden.exception';
+@Controller()
+export class AppController {
+    @Get('exception')
+    exception() {
+        //throw new Error('exception');
+        //throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new HttpException({
+            status: HttpStatus.FORBIDDEN,
+            error: 'This is a custom message',
+        }, HttpStatus.FORBIDDEN);
+    }
+    @Get('custom')
+    custom() {
+        throw new ForbiddenException();
+    }
++   @Get('bad-request')
++   badRequest() {
++       throw new BadRequestException('Something bad happened', 'Some error description');
++   }
+}
+```
+### 3.2 http-exception.ts
+src\@nestjs\common\http-exception.ts
+```js
+import { HttpStatus } from './http-status.enum';
+export class HttpException extends Error {
+    private readonly response: string | object;
+    private readonly status: HttpStatus;
+
+    constructor(response: string | object, status: HttpStatus) {
+        super();
+        this.response = response;
+        this.status = status;
+    }
+
+    getResponse(): string | object {
+        return this.response;
+    }
+
+    getStatus(): HttpStatus {
+        return this.status;
+    }
+}
++export class BadRequestException extends HttpException {
++    constructor(message: string, error?: string) {
++        super({ message, error, statusCode: HttpStatus.BAD_REQUEST }, HttpStatus.BAD_REQUEST);
++    }
++}
+export class ForbiddenException extends HttpException {
+    constructor(message: string, error: string = 'Forbidden') {
+        super({ message, error, statusCode: HttpStatus.FORBIDDEN }, HttpStatus.FORBIDDEN);
+    }
+}
+export class BadGatewayException extends HttpException {
+    constructor() {
+        super('Bad Gateway', HttpStatus.BAD_GATEWAY);
+    }
+}
+export class RequestTimeoutException extends HttpException {
+    constructor() {
+        super('Request Timeout', HttpStatus.REQUEST_TIMEOUT);
+    }
+}
+```
+## 4.异常过滤器
+### 4.1 main.ts
+src\main.ts
+```js
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from './app.module';
+import session from 'express-session';
++import { CustomExceptionFilter } from './custom-exception.filter';
+async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
++   //app.useGlobalFilters(new CustomExceptionFilter());
+    app.use(session({
+        secret: 'your-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24
+        }
+    }));
+    await app.listen(3000);
+}
+bootstrap();
+```
+### 4.2 app.controller.ts
+src\app.controller.ts
+```js
++import { Controller, Get, HttpException, HttpStatus, BadRequestException, UseFilters } from '@nestjs/common';
+import { ForbiddenException } from './forbidden.exception';
++import { CustomExceptionFilter } from './custom-exception.filter';
+@Controller()
++@UseFilters(new CustomExceptionFilter())
+export class AppController {
+    @Get('exception')
+    exception() {
+        //throw new Error('exception');
+        //throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new HttpException({
+            status: HttpStatus.FORBIDDEN,
+            error: 'This is a custom message',
+        }, HttpStatus.FORBIDDEN);
+    }
+    @Get('custom')
+    custom() {
+        throw new ForbiddenException();
+    }
+    @Get('bad-request')
+    badRequest() {
+        throw new BadRequestException('Something bad happened', 'Some error description');
+    }
++   @Get('useFilters')
++   @UseFilters(new CustomExceptionFilter())
++   async UseFilters() {
++       throw new ForbiddenException();
++   }
+}
+```
+### 4.3 custom-exception.filter.ts
+src\custom-exception.filter.ts
+```js
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { Request, Response } from 'express';
+@Catch(HttpException)
+export class CustomExceptionFilter implements ExceptionFilter {
+    catch(exception: HttpException, host: ArgumentsHost) {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>();
+        const request = ctx.getRequest<Request>();
+        const status = exception.getStatus();
+        response
+            .status(status)
+            .json({
+                statusCode: status,
+                timestamp: new Date().toISOString(),
+                path: request.url,
+            });
+    }
+}
+```
+### 4.4 common\index.ts
+src\@nestjs\common\index.ts
+```js
+export * from './module.decorator'
+export * from './controller.decorator';
+export * from './http-methods.decorator';
+export * from './param.decorator';
+export * from './injectable.decorator';
+export * from './inject.decorator';
+export * from './constants';
+export * from './request.method.enum';
+export * from './middleware.interface';
+export * from './nest-module.interface';
+export * from './middleware-consumer.interface';
+export * from './arguments-host.interface';
+export * from './catch.decorator';
+export * from './exception-filter.interface';
+export * from './http-exception.filter';
+export * from './http-methods.decorator';
+export * from './http-exception';
+export * from './http-status.enum';
++export * from './use-filters.decorator';
+```
+### 4.5 use-filters.decorator.ts
+src\@nestjs\common\use-filters.decorator.ts
+```js
+import 'reflect-metadata';
+import { ExceptionFilter } from './exception-filter.interface';
+export function UseFilters(...filters: ExceptionFilter[]): ClassDecorator & MethodDecorator {
+    return (target: object | Function, propertyKey?: string | symbol, descriptor?: TypedPropertyDescriptor<any>) => {
+        if (descriptor) {
+            Reflect.defineMetadata('filters', filters, descriptor.value);
+        } else {
+            Reflect.defineMetadata('filters', filters, target);
+        }
+    };
+}
+```
+### 4.6 nest-application.ts
+src\@nestjs\core\nest-application.ts
+```js
+import 'reflect-metadata';
+import express, { Express, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express'
+import { Logger } from "./logger";
+import path from 'path'
+import { RequestMethod, GlobalHttpExceptionFilter, ArgumentsHost, ExceptionFilter } from '@nestjs/common'
+import { INJECTED_TOKENS, DESIGN_PARAMTYPES } from '../common/constants'
+import { defineModule } from '../common/module.decorator';
+export class NestApplication {
+    private readonly app: Express = express()
+    private readonly providerInstances = new Map()
+    private readonly globalProviders = new Set()
+    private readonly moduleProviers = new Map()
+    private readonly middlewares = []
+    private readonly excludedRoutes = []
++   private readonly globalHttpExceptionFilters: ExceptionFilter[] = [];
+    private readonly defaultGlobalHttpExceptionFilter = new GlobalHttpExceptionFilter()
+    constructor(protected readonly module) {
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+    }
+    exclude(...routeInfos): this {
+        this.excludedRoutes.push(...routeInfos.map(this.normalizeRouteInfo));
+        return this;
+    }
+    initMiddlewares() {
+        this.module.prototype.configure?.(this);
+    }
+    apply(...middleware) {
+        defineModule(this.module, middleware)
+        this.middlewares.push(...middleware);
+        return this;
+    }
+    getMiddelwareInstance(middleware) {
+        if (middleware instanceof Function) {
+            const dependencies = this.resolveDependencies(middleware);
+            return new middleware(...dependencies);
+        }
+        return middleware;
+    }
+    isExcluded(reqPath: string, method: RequestMethod) {
+        return this.excludedRoutes.some(routeInfo => {
+            const { routePath, routeMethod } = routeInfo;
+            return routePath === reqPath && (routeMethod === RequestMethod.ALL || routeMethod === method)
+        });
+    }
+    forRoutes(...routes) {
+        for (const route of routes) {
+            for (const middleware of this.middlewares) {
+                const { routePath, routeMethod } = this.normalizeRouteInfo(route);
+                this.app.use(routePath, (req, res, next) => {
+                    if (this.isExcluded(req.originalUrl, req.method)) {
+                        return next();
+                    }
+                    if (routeMethod === RequestMethod.ALL || routeMethod === req.method) {
+                        if ('use' in middleware.prototype || 'use' in middleware) {
+                            const middlewareInstance = this.getMiddelwareInstance(middleware);
+                            middlewareInstance.use(req, res, next);
+                        } else if (middleware instanceof Function) {
+                            middleware(req, res, next);
+                        } else {
+                            next();
+                        }
+                    } else {
+                        next();
+                    }
+                });
+            }
+        }
+        return this;
+    }
+    private normalizeRouteInfo(route) {
+        let routePath = '';
+        let routeMethod = RequestMethod.ALL;
+        if (typeof route === 'string') {
+            routePath = route;
+        } else if ('path' in route) {
+            routePath = route.path;
+            routeMethod = route.method ?? RequestMethod.ALL;
+        } else if (route instanceof Function) {
+            routePath = Reflect.getMetadata('prefix', route);
+        }
+        routePath = path.posix.join('/', routePath);
+        return { routePath, routeMethod }
+    }
+    async initProviders() {
+        const imports = Reflect.getMetadata('imports', this.module) ?? [];
+        for (const importModule of imports) {
+            let importedModule = importModule;
+            if (importModule instanceof Promise) {
+                importedModule = await importedModule;
+            }
+            if ('module' in importedModule) {
+                const { module, providers, controllers, exports } = importedModule;
+                const oldControllers = Reflect.getMetadata('controllers', module)
+                const newControllers = [...(oldControllers ?? []), ...(controllers ?? [])];
+                defineModule(module, newControllers);
+                const oldProviders = Reflect.getMetadata('providers', module)
+                const newProviders = [...(oldProviders ?? []), ...(providers ?? [])];
+                defineModule(module, newProviders);
+                const oldExports = Reflect.getMetadata('exports', module)
+                const newExports = [...(oldExports ?? []), ...(exports ?? [])];
+                Reflect.defineMetadata('controllers', newControllers, module)
+                Reflect.defineMetadata('providers', newProviders, module)
+                Reflect.defineMetadata('exports', newExports, module)
+                this.registerProvidersFromModule(module, this.module);
+            } else {
+                this.registerProvidersFromModule(importedModule, this.module);
+            }
+        }
+        const providers = Reflect.getMetadata('providers', this.module) ?? [];
+        for (const provider of providers) {
+            this.addProvider(provider, this.module);
+        }
+    }
+    private registerProvidersFromModule(module, ...parentModules) {
+        const global = Reflect.getMetadata('global', module);
+        const importedProviders = Reflect.getMetadata('providers', module) ?? [];
+        const exports = Reflect.getMetadata('exports', module) ?? [];
+        for (const exportToken of exports) {
+            if (this.isModule(exportToken)) {
+                this.registerProvidersFromModule(exportToken, module, ...parentModules);
+            } else {
+                const provider = importedProviders.find(provider => provider === exportToken || provider.provide == exportToken);
+                if (provider) {
+                    [module, ...parentModules].forEach(module => {
+                        this.addProvider(provider, module, global);
+                    });
+                }
+            }
+        }
+    }
+    private isModule(exportToken) {
+        return exportToken && exportToken instanceof Function && Reflect.getMetadata('isModule', exportToken);
+    }
+    addProvider(provider, module, global = false) {
+        const providers = global ? this.globalProviders : (this.moduleProviers.get(module) || new Set());
+        if (!this.moduleProviers.has(module)) {
+            this.moduleProviers.set(module, providers);
+        }
+        const injectToken = provider.provide ?? provider;
+        if (this.providerInstances.has(injectToken)) {
+            if (!providers.has(injectToken)) {
+                providers.add(injectToken);
+            }
+            return;
+        }
+        if (provider.provide && provider.useClass) {
+            const Clazz = provider.useClass;
+            const dependencies = this.resolveDependencies(Clazz);
+            const value = new Clazz(...dependencies);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useValue) {
+            this.providerInstances.set(provider.provide, provider.useValue);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useFactory) {
+            const inject = provider.inject ?? [];
+            const injectedValues = inject.map(injectToken => this.getProviderByToken(injectToken, module));
+            const value = provider.useFactory(...injectedValues);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else {
+            const dependencies = this.resolveDependencies(provider);
+            const value = new provider(...dependencies);
+            this.providerInstances.set(provider, value);
+            providers.add(provider);
+        }
+    }
+    use(middleware) {
+        this.app.use(middleware);
+    }
+    private getProviderByToken = (injectedToken, module) => {
+        if (this.moduleProviers.get(module)?.has(injectedToken) || this.globalProviders.has(injectedToken)) {
+            return this.providerInstances.get(injectedToken);
+        } else {
+            return null;
+        }
+    }
+    private resolveDependencies(Clazz) {
+        const injectedTokens = Reflect.getMetadata(INJECTED_TOKENS, Clazz) ?? [];
+        const constructorParams = Reflect.getMetadata(DESIGN_PARAMTYPES, Clazz) ?? [];
+        return constructorParams.map((param, index) => {
+            const module = Reflect.getMetadata('module', Clazz);
+            return this.getProviderByToken(injectedTokens[index] ?? param, module);
+        });
+    }
+    async init() {
+        const controllers = Reflect.getMetadata('controllers', this.module) || [];
+        Logger.log(`AppModule dependencies initialized`, 'InstanceLoader');
+        for (const Controller of controllers) {
+            const dependencies = this.resolveDependencies(Controller);
+            const controller = new Controller(...dependencies);
+            const prefix = Reflect.getMetadata('prefix', Controller) || '/';
+            Logger.log(`${Controller.name} {${prefix}}`, 'RoutesResolver');
+            const controllerPrototype = Controller.prototype;
++           const controllerFilters = Reflect.getMetadata('filters', Controller) || [];
+            for (const methodName of Object.getOwnPropertyNames(controllerPrototype)) {
+                const method = controllerPrototype[methodName];
+                const httpMethod = Reflect.getMetadata('method', method);
+                const pathMetadata = Reflect.getMetadata('path', method);
+                const redirectUrl = Reflect.getMetadata('redirectUrl', method);
+                const redirectStatusCode = Reflect.getMetadata('redirectStatusCode', method);
+                const statusCode = Reflect.getMetadata('statusCode', method);
+                const headers = Reflect.getMetadata('headers', method) ?? [];
++               const methodFilters = Reflect.getMetadata('filters', method) || [];
+                if (!httpMethod) continue;
+                const routePath = path.posix.join('/', prefix, pathMetadata)
++               const filters = [...controllerFilters, ...methodFilters];
+                this.app[httpMethod.toLowerCase()](routePath, async (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+                    const host: ArgumentsHost = {
+                        switchToHttp: () => ({
+                            getRequest: () => req,
+                            getResponse: () => res,
+                            getNext: () => next,
+                        }),
+                    };
++                   try {
+                        const args = this.resolveParams(controller, methodName, req, res, next);
+                        const result = await method.call(controller, ...args);
+                        if (result?.url) {
+                            return res.redirect(result.statusCode || 302, result.url);
+                        }
+                        if (redirectUrl) {
+                            return res.redirect(redirectStatusCode || 302, redirectUrl);
+                        }
+                        if (statusCode) {
+                            res.statusCode = statusCode;
+                        } else if (httpMethod === 'POST') {
+                            res.statusCode = 201;
+                        }
+                        const responseMetadata = this.getResponseMetadata(controller, methodName);
+                        if (!responseMetadata || (responseMetadata?.data?.passthrough)) {
+                            headers.forEach(({ name, value }) => {
+                                res.setHeader(name, value);
+                            });
+                            res.send(result);
+                        }
++                   } catch (error) {
++                       await this.callExceptionFilters(error, host, filters);
++                   }
+                })
+                Logger.log(`Mapped {${routePath}, ${httpMethod}} route`, 'RoutesResolver');
+            }
+        }
+        Logger.log(`Nest application successfully started`, 'NestApplication');
+    }
+    private getResponseMetadata(controller, methodName) {
+        const paramsMetaData = Reflect.getMetadata(`params`, controller, methodName) ?? [];
+        return paramsMetaData.filter(Boolean).find((param) =>
+            param.key === 'Response' || param.key === 'Res' || param.key === 'Next');
+    }
+    private resolveParams(instance: any, methodName: string, req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
+        const paramsMetaData = Reflect.getMetadata(`params`, instance, methodName) ?? [];
+        return paramsMetaData.map((paramMetaData) => {
+            const { key, data, factory } = paramMetaData;
+            const ctx = {
+                swithToHttp: () => ({
+                    getRequest: () => req,
+                    getResponse: () => req,
+                    getNext: () => next,
+                })
+            }
+            switch (key) {
+                case "Request":
+                case "Req":
+                    return req;
+                case "Query":
+                    return data ? req.query[data] : req.query;
+                case "Headers":
+                    return data ? req.headers[data] : req.headers;
+                case 'Session':
+                    return data ? req.session[data] : req.session;
+                case 'Ip':
+                    return req.ip;
+                case 'Param':
+                    return data ? req.params[data] : req.params;
+                case 'Body':
+                    return data ? req.body[data] : req.body;
+                case "Response":
+                case "Res":
+                    return res;
+                case "Next":
+                    return next;
+                case "DecoratorFactory":
+                    return factory(data, ctx);
+                default:
+                    return null;
+            }
+        })
+    }
++   private async callExceptionFilters(error: any, host: ArgumentsHost, filters: ExceptionFilter[] = []) {
++       const allFilters = [...filters, ...this.globalHttpExceptionFilters, this.defaultGlobalHttpExceptionFilter];
+        for (const filter of allFilters) {
+            const target = filter.constructor;
+            const exceptions = Reflect.getMetadata('catch', target) || [];
+            if (exceptions.length == 0 || exceptions.some((exception: any) => error instanceof exception)) {
+                filter.catch(error, host);
+                break;
+            }
+        }
+    }
++   useGlobalFilters(...filters: ExceptionFilter[]): void {
++       this.globalHttpExceptionFilters.push(...filters);
++   }
+    async listen(port) {
+        await this.initProviders();
+        await this.initMiddlewares();
+        await this.init();
+        this.app.listen(port, () => {
+            Logger.log(`Application is running on http://localhost:${port}`, 'NestApplication');
+        });
+    }
+}
+```
+## 5.APP_FILTER
++ 在NestJS中，APP_FILTER是一个令牌，用于全局范围内提供异常过滤器。 当你使用APP_FILTER时，NestJS会将指定的异常过滤器应用于应用程序中的所有控制器和路由处理程序。 APP_FILTER：通过依赖注入的方式，可以利用NestJS的依赖注入容器来管理过滤器实例。如果过滤器有其他依赖项，可以通过构造函数注入它们
+
+### 5.1 main.ts
+src\main.ts
+```js
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from './app.module';
+import session from 'express-session';
+-import { CustomExceptionFilter } from './custom-exception.filter';
+async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+-   app.useGlobalFilters(new CustomExceptionFilter());
+    app.use(session({
+        secret: 'your-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24
+        }
+    }));
+    await app.listen(3000);
+}
+bootstrap();
+```
+### 5.2 app.module.ts
+src\app.module.ts
+```js
+import { Module } from "@nestjs/common";
+import { AppController } from './app.controller';
++import { APP_FILTER } from '@nestjs/core';
++import { CustomExceptionFilter } from './custom-exception.filter';
+@Module({
+    controllers: [AppController],
++   providers: [
++       {
++           provide: APP_FILTER,
++           useClass: CustomExceptionFilter,
++       }
++   ],
+})
+export class AppModule { }
+```
+### 5.3 app.controller.ts
+src\app.controller.ts
+```js
+import { Controller, Get, HttpException, HttpStatus, BadRequestException, UseFilters } from '@nestjs/common';
+import { ForbiddenException } from './forbidden.exception';
+-import { CustomExceptionFilter } from './custom-exception.filter';
+@Controller()
+-@UseFilters(new CustomExceptionFilter())
+export class AppController {
+    @Get('exception')
+    exception() {
+        //throw new Error('exception');
+        //throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new HttpException({
+            status: HttpStatus.FORBIDDEN,
+            error: 'This is a custom message',
+        }, HttpStatus.FORBIDDEN);
+    }
+    @Get('custom')
+    custom() {
+        throw new ForbiddenException();
+    }
+    @Get('bad-request')
+    badRequest() {
+        throw new BadRequestException('Something bad happened', 'Some error description');
+    }
+    @Get('useFilters')
+-   @UseFilters(new CustomExceptionFilter())
+    async UseFilters() {
+        throw new ForbiddenException();
+    }
+}
+```
+### 5.4 core\index.ts
+src\@nestjs\core\index.ts
+```js
+export * from './nest-factory';
+export * from './logger';
+export * from './nest-application';
++export * from './constants';
+```
+### 5.5 constants.ts
+src\@nestjs\core\constants.ts
+```js
+export const APP_FILTER = 'APP_FILTER';
+```
+### 5.6 nest-application.ts
+src\@nestjs\core\nest-application.ts
+```js
+import 'reflect-metadata';
+import express, { Express, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express'
+import { Logger } from "./logger";
+import path from 'path'
++import { RequestMethod, GlobalHttpExceptionFilter, ArgumentsHost, ExceptionFilter, INJECTED_TOKENS, DESIGN_PARAMTYPES, defineModule } from '@nestjs/common';
++import { APP_FILTER } from '@nestjs/core';
+export class NestApplication {
+    private readonly app: Express = express()
+    private readonly providerInstances = new Map()
+    private readonly globalProviders = new Set()
+    private readonly moduleProviers = new Map()
+    private readonly middlewares = []
+    private readonly excludedRoutes = []
+    private readonly globalHttpExceptionFilters: ExceptionFilter[] = [];
+    private readonly defaultGlobalHttpExceptionFilter = new GlobalHttpExceptionFilter()
+    constructor(protected readonly module) {
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+    }
+    exclude(...routeInfos): this {
+        this.excludedRoutes.push(...routeInfos.map(this.normalizeRouteInfo));
+        return this;
+    }
+    initMiddlewares() {
+        this.module.prototype.configure?.(this);
+    }
+    apply(...middleware) {
+        defineModule(this.module, middleware)
+        this.middlewares.push(...middleware);
+        return this;
+    }
+    getMiddelwareInstance(middleware) {
+        if (middleware instanceof Function) {
+            const dependencies = this.resolveDependencies(middleware);
+            return new middleware(...dependencies);
+        }
+        return middleware;
+    }
+    isExcluded(reqPath: string, method: RequestMethod) {
+        return this.excludedRoutes.some(routeInfo => {
+            const { routePath, routeMethod } = routeInfo;
+            return routePath === reqPath && (routeMethod === RequestMethod.ALL || routeMethod === method)
+        });
+    }
+    forRoutes(...routes) {
+        for (const route of routes) {
+            for (const middleware of this.middlewares) {
+                const { routePath, routeMethod } = this.normalizeRouteInfo(route);
+                this.app.use(routePath, (req, res, next) => {
+                    if (this.isExcluded(req.originalUrl, req.method)) {
+                        return next();
+                    }
+                    if (routeMethod === RequestMethod.ALL || routeMethod === req.method) {
+                        if ('use' in middleware.prototype || 'use' in middleware) {
+                            const middlewareInstance = this.getMiddelwareInstance(middleware);
+                            middlewareInstance.use(req, res, next);
+                        } else if (middleware instanceof Function) {
+                            middleware(req, res, next);
+                        } else {
+                            next();
+                        }
+                    } else {
+                        next();
+                    }
+                });
+            }
+        }
+        return this;
+    }
+    private normalizeRouteInfo(route) {
+        let routePath = '';
+        let routeMethod = RequestMethod.ALL;
+        if (typeof route === 'string') {
+            routePath = route;
+        } else if ('path' in route) {
+            routePath = route.path;
+            routeMethod = route.method ?? RequestMethod.ALL;
+        } else if (route instanceof Function) {
+            routePath = Reflect.getMetadata('prefix', route);
+        }
+        routePath = path.posix.join('/', routePath);
+        return { routePath, routeMethod }
+    }
+    async initProviders() {
+        const imports = Reflect.getMetadata('imports', this.module) ?? [];
+        for (const importModule of imports) {
+            let importedModule = importModule;
+            if (importModule instanceof Promise) {
+                importedModule = await importedModule;
+            }
+            if ('module' in importedModule) {
+                const { module, providers, controllers, exports } = importedModule;
+                const oldControllers = Reflect.getMetadata('controllers', module)
+                const newControllers = [...(oldControllers ?? []), ...(controllers ?? [])];
+                defineModule(module, newControllers);
+                const oldProviders = Reflect.getMetadata('providers', module)
+                const newProviders = [...(oldProviders ?? []), ...(providers ?? [])];
+                defineModule(module, newProviders);
+                const oldExports = Reflect.getMetadata('exports', module)
+                const newExports = [...(oldExports ?? []), ...(exports ?? [])];
+                Reflect.defineMetadata('controllers', newControllers, module)
+                Reflect.defineMetadata('providers', newProviders, module)
+                Reflect.defineMetadata('exports', newExports, module)
+                this.registerProvidersFromModule(module, this.module);
+            } else {
+                this.registerProvidersFromModule(importedModule, this.module);
+            }
+        }
+        const providers = Reflect.getMetadata('providers', this.module) ?? [];
+        for (const provider of providers) {
+            this.addProvider(provider, this.module);
+        }
+    }
+    private registerProvidersFromModule(module, ...parentModules) {
+        const global = Reflect.getMetadata('global', module);
+        const importedProviders = Reflect.getMetadata('providers', module) ?? [];
+        const exports = Reflect.getMetadata('exports', module) ?? [];
+        for (const exportToken of exports) {
+            if (this.isModule(exportToken)) {
+                this.registerProvidersFromModule(exportToken, module, ...parentModules);
+            } else {
+                const provider = importedProviders.find(provider => provider === exportToken || provider.provide == exportToken);
+                if (provider) {
+                    [module, ...parentModules].forEach(module => {
+                        this.addProvider(provider, module, global);
+                    });
+                }
+            }
+        }
+    }
+    private isModule(exportToken) {
+        return exportToken && exportToken instanceof Function && Reflect.getMetadata('isModule', exportToken);
+    }
+    addProvider(provider, module, global = false) {
+        const providers = global ? this.globalProviders : (this.moduleProviers.get(module) || new Set());
+        if (!this.moduleProviers.has(module)) {
+            this.moduleProviers.set(module, providers);
+        }
+        const injectToken = provider.provide ?? provider;
+        if (this.providerInstances.has(injectToken)) {
+            if (!providers.has(injectToken)) {
+                providers.add(injectToken);
+            }
+            return;
+        }
+        if (provider.provide && provider.useClass) {
+            const Clazz = provider.useClass;
+            const dependencies = this.resolveDependencies(Clazz);
+            const value = new Clazz(...dependencies);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useValue) {
+            this.providerInstances.set(provider.provide, provider.useValue);
+            providers.add(provider.provide);
+        } else if (provider.provide && provider.useFactory) {
+            const inject = provider.inject ?? [];
+            const injectedValues = inject.map(injectToken => this.getProviderByToken(injectToken, module));
+            const value = provider.useFactory(...injectedValues);
+            this.providerInstances.set(provider.provide, value);
+            providers.add(provider.provide);
+        } else {
+            const dependencies = this.resolveDependencies(provider);
+            const value = new provider(...dependencies);
+            this.providerInstances.set(provider, value);
+            providers.add(provider);
+        }
+    }
+    use(middleware) {
+        this.app.use(middleware);
+    }
+    private getProviderByToken = (injectedToken, module) => {
+        if (this.moduleProviers.get(module)?.has(injectedToken) || this.globalProviders.has(injectedToken)) {
+            return this.providerInstances.get(injectedToken);
+        } else {
+            return null;
+        }
+    }
+    private resolveDependencies(Clazz) {
+        const injectedTokens = Reflect.getMetadata(INJECTED_TOKENS, Clazz) ?? [];
+        const constructorParams = Reflect.getMetadata(DESIGN_PARAMTYPES, Clazz) ?? [];
+        return constructorParams.map((param, index) => {
+            const module = Reflect.getMetadata('module', Clazz);
+            return this.getProviderByToken(injectedTokens[index] ?? param, module);
+        });
+    }
+    async init() {
+        const controllers = Reflect.getMetadata('controllers', this.module) || [];
+        Logger.log(`AppModule dependencies initialized`, 'InstanceLoader');
+        for (const Controller of controllers) {
+            const dependencies = this.resolveDependencies(Controller);
+            const controller = new Controller(...dependencies);
+            const prefix = Reflect.getMetadata('prefix', Controller) || '/';
+            Logger.log(`${Controller.name} {${prefix}}`, 'RoutesResolver');
+            const controllerPrototype = Controller.prototype;
+            const controllerFilters = Reflect.getMetadata('filters', Controller) || [];
+            for (const methodName of Object.getOwnPropertyNames(controllerPrototype)) {
+                const method = controllerPrototype[methodName];
+                const httpMethod = Reflect.getMetadata('method', method);
+                const pathMetadata = Reflect.getMetadata('path', method);
+                const redirectUrl = Reflect.getMetadata('redirectUrl', method);
+                const redirectStatusCode = Reflect.getMetadata('redirectStatusCode', method);
+                const statusCode = Reflect.getMetadata('statusCode', method);
+                const headers = Reflect.getMetadata('headers', method) ?? [];
+                const methodFilters = Reflect.getMetadata('filters', method) || [];
+                if (!httpMethod) continue;
+                const routePath = path.posix.join('/', prefix, pathMetadata)
+                const filters = [...controllerFilters, ...methodFilters];
+                this.app[httpMethod.toLowerCase()](routePath, async (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+                    const host: ArgumentsHost = {
+                        switchToHttp: () => ({
+                            getRequest: () => req,
+                            getResponse: () => res,
+                            getNext: () => next,
+                        }),
+                    };
+                    try {
+                        const args = this.resolveParams(controller, methodName, req, res, next);
+                        const result = await method.call(controller, ...args);
+                        if (result?.url) {
+                            return res.redirect(result.statusCode || 302, result.url);
+                        }
+                        if (redirectUrl) {
+                            return res.redirect(redirectStatusCode || 302, redirectUrl);
+                        }
+                        if (statusCode) {
+                            res.statusCode = statusCode;
+                        } else if (httpMethod === 'POST') {
+                            res.statusCode = 201;
+                        }
+                        const responseMetadata = this.getResponseMetadata(controller, methodName);
+                        if (!responseMetadata || (responseMetadata?.data?.passthrough)) {
+                            headers.forEach(({ name, value }) => {
+                                res.setHeader(name, value);
+                            });
+                            res.send(result);
+                        }
+                    } catch (error) {
+                        await this.callExceptionFilters(error, host, filters);
+                    }
+
+                })
+                Logger.log(`Mapped {${routePath}, ${httpMethod}} route`, 'RoutesResolver');
+            }
+        }
+        Logger.log(`Nest application successfully started`, 'NestApplication');
+    }
+    private getResponseMetadata(controller, methodName) {
+        const paramsMetaData = Reflect.getMetadata(`params`, controller, methodName) ?? [];
+        return paramsMetaData.filter(Boolean).find((param) =>
+            param.key === 'Response' || param.key === 'Res' || param.key === 'Next');
+    }
+    private resolveParams(instance: any, methodName: string, req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
+        const paramsMetaData = Reflect.getMetadata(`params`, instance, methodName) ?? [];
+        return paramsMetaData.map((paramMetaData) => {
+            const { key, data, factory } = paramMetaData;
+            const ctx = {
+                swithToHttp: () => ({
+                    getRequest: () => req,
+                    getResponse: () => req,
+                    getNext: () => next,
+                })
+            }
+            switch (key) {
+                case "Request":
+                case "Req":
+                    return req;
+                case "Query":
+                    return data ? req.query[data] : req.query;
+                case "Headers":
+                    return data ? req.headers[data] : req.headers;
+                case 'Session':
+                    return data ? req.session[data] : req.session;
+                case 'Ip':
+                    return req.ip;
+                case 'Param':
+                    return data ? req.params[data] : req.params;
+                case 'Body':
+                    return data ? req.body[data] : req.body;
+                case "Response":
+                case "Res":
+                    return res;
+                case "Next":
+                    return next;
+                case "DecoratorFactory":
+                    return factory(data, ctx);
+                default:
+                    return null;
+            }
+        })
+    }
+    private async callExceptionFilters(error: any, host: ArgumentsHost, filters: ExceptionFilter[] = []) {
+        const allFilters = [...filters, ...this.globalHttpExceptionFilters, this.defaultGlobalHttpExceptionFilter];
+        for (const filter of allFilters) {
+            const target = filter.constructor;
+            const exceptions = Reflect.getMetadata('catch', target) || [];
+            if (exceptions.length == 0 || exceptions.some((exception: any) => error instanceof exception)) {
+                filter.catch(error, host);
+                break;
+            }
+        }
+    }
+    useGlobalFilters(...filters: ExceptionFilter[]): void {
+        this.globalHttpExceptionFilters.push(...filters);
+    }
++   private initGlobalFilters() {
++       const providers = Reflect.getMetadata('providers', this.module) || [];
++       for (const provider of providers) {
++           if (provider.provide === APP_FILTER) {
++               const instance = this.getProviderByToken(APP_FILTER, this.module);
++               this.useGlobalFilters(instance);
++           }
++       }
++   }
+    async listen(port) {
+        await this.initProviders();
+        await this.initMiddlewares();
++       this.initGlobalFilters();
+        await this.init();
+        this.app.listen(port, () => {
+            Logger.log(`Application is running on http://localhost:${port}`, 'NestApplication');
+        });
+    }
+}
+```
