@@ -1,11 +1,12 @@
 import {htmlSidebar} from "./frontend/htmlSidebar";
 import {cssSidebar} from "./frontend/cssSidebar";
+import {reactSidebar} from "./frontend/reactSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
 import {internalSkillSidebar} from "./internal_skill/skillSidebar";
 
 import {nestjsSidebar} from "./backend/nestjsSidebar";
 import {rustSidebar} from "./backend/rustSidebar";
-import { nginxSidebar } from "./backend/nginxSidebar";
+import {nginxSidebar } from "./backend/nginxSidebar";
 import {toolsSidebar} from "./tools/toolsSidebar";
 import {secSidebar} from "./security/secSidebar";
 import {devopsSidebar} from "./devops/devopsSidebar";
@@ -60,6 +61,7 @@ export default {
 			// 前端
 			'/views/frontend/html/': htmlSidebar,
 			'/views/frontend/css/': cssSidebar,
+			'/views/frontend/react/': reactSidebar,
 			// 后端
 			'/views/backend/nestjs/': nestjsSidebar,
 			'/views/backend/nginx/': nginxSidebar,
