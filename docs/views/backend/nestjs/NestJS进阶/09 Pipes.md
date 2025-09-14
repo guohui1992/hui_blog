@@ -1,8 +1,21 @@
-## 1.ParseIntPipe
 + 管道是一个用 @Injectable() 装饰器注释的类，它实现了 PipeTransform 接口。
 + 管道有两个典型的用例：
     + 转换：将输入数据转换为所需的形式（例如，从字符串转换为整数）
     + 验证：评估输入数据，如果有效，则简单地将其传递，否则抛出异常
+---
+
+| 管道                   | 作用                                                                                                       | 失败时抛出                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------- | --------------------- |
+| **ParseIntPipe**     | 把字符串参数转成 **整数**（`number`）。例：`"123"` → `123`                                                              | `BadRequestException` |
+| **ParseFloatPipe**   | 把字符串参数转成 **浮点数**（`number`）。例：`"3.14"` → `3.14`                                                           | `BadRequestException` |
+| **ParseBoolPipe**    | 把字符串参数转成 **布尔值**。规则：`'true'`、`'1'` → `true`；其余 → `false`                                                 | `BadRequestException` |
+| **ParseArrayPipe**   | 把字符串或对象转成 **数组**，可指定分隔符、元素类型、是否扁平化等。例：`"a,b,c"` → `['a','b','c']`                                        | `BadRequestException` |
+| **ParseUUIDPipe**    | 校验字符串是否为 **标准 UUID v1-v5**。通过则原样返回，否则抛异常                                                                 | `BadRequestException` |
+| **ParseEnumPipe**    | 校验字符串是否属于 **指定枚举** 的有效值。例：`@Query('size', new ParseEnumPipe(SizeEnum))`                                  | `BadRequestException` |
+| **DefaultValuePipe** | 当参数 **缺失** 或 **空字符串** 时，返回默认值；否则原样透传。常与其他管道组合使用： `@Query('page', new DefaultValuePipe(1), ParseIntPipe)` |                       |
+
+## 1.ParseIntPipe
+把字符串参数转成 整数（number）
 ### 1.1. pipe-transform.interface.ts
 src/@nestjs/common/pipe-transform.interface.ts
 ```js
@@ -503,6 +516,7 @@ import { AppController } from './app.controller';
 export class AppModule { }
 ```
 ## 2.ParseFloatPipe
+把字符串参数转成 浮点数（number）
 ### 2.1. parse-float.pipe.ts
 src/@nestjs/common/pipes/parse-float.pipe.ts
 ```js
@@ -542,6 +556,7 @@ export class AppController {
 }
 ```
 ## 3.ParseBoolPipe
+把字符串参数转成 布尔值。
 ### 3.1. parse-bool.pipe.ts
 src/@nestjs/common/pipes/parse-bool.pipe.ts
 ```js
@@ -588,7 +603,7 @@ export class AppController {
 }
 ```
 ## 4.ParseArrayPipe
- NestJS 内置的一个 验证 + 转换 管道，用于把“看起来像数组的字符串”变成真正的数组，并可以对每个元素再做类型/格式校验
+把字符串或对象转成 数组，可指定分隔符、元素类型、是否扁平化等。
 ### 4.1. parse-array.pipe.ts
 src/@nestjs/common/pipes/parse-array.pipe.ts
 ```js
@@ -666,6 +681,7 @@ export class AppController {
 }
 ```
 ## 5.ParseUUIDPipe
+校验字符串是否为 标准 UUID v1-v5。通过则原样返回，否则抛异常
 ```shell
 npm install uuid
 ```
@@ -722,6 +738,7 @@ export class AppController {
 }
 ```
 ## 6.ParseEnumPipe
+校验字符串是否属于 指定枚举 的有效值。
 ### 6.1. parse-enum.pipe.ts
 src/@nestjs/common/pipes/parse-enum.pipe.ts
 ```js
@@ -790,6 +807,7 @@ export class AppController {
 }
 ```
 ## 7.DefaultValuePipe
+当参数 缺失 或 空字符串 时，返回默认值；否则原样透传。
 ### 7.1. default-value.pipe.ts
 src/@nestjs/common/pipes/default-value.pipe.ts
 ```js
