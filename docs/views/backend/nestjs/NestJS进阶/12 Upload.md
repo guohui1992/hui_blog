@@ -1,8 +1,8 @@
 ## 1.单文件上传
-[file-upload](https://nestjs.docs-hub.com/techniques/file-upload)
-为了处理文件上传，Nest 提供了一个基于 multer 中间件包的内置模块，用于 Express。
++ [file-upload](https://nestjs.docs-hub.com/techniques/file-upload)
++ 为了处理文件上传，Nest 提供了一个基于 multer 中间件包的内置模块，用于 Express。
 
-Multer 处理以 `multipart/form-data` 格式发布的数据，这种格式主要用于通过 HTTP POST 请求上传文件
++ Multer 处理以 `multipart/form-data` 格式发布的数据，这种格式主要用于通过 HTTP POST 请求上传文件
 ```shell
 npm i -D @types/multer
 ```
