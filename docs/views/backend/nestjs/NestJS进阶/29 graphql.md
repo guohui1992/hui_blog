@@ -557,7 +557,7 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
 })();
 ```
 ### 7.3 graphiQL
-apollographql
+[apollographql](https://studio.apollographql.com/sandbox?endpoint=http%3A%2F%2Flocalhost%3A4000%2Fgraphql)
 ```js
 subscription {
   userAdded {
