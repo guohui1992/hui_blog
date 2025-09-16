@@ -53,7 +53,7 @@ app.listen(4000, () =>
 );
 ```
 ### 1.3 GraphiQL
-[http://localhost:4000/graphql](http://localhost:4000/graphql)
+`http://localhost:4000/graphql`
 ```js
 # 欢迎使用 GraphiQL
 
