@@ -8350,7 +8350,7 @@ try {
 }
 ```
 ### 总结
-@nestjs/mongoose 是一个强大的工具，简化了 NestJS 应用程序中使用 MongoDB 的开发过程。它结合了 Mongoose 的灵活性和 NestJS 的模块化设计，使得开发者能够以类型安全、可维护的方式构建复杂的数据库交互逻辑。
+`@nestjs/mongoose` 是一个强大的工具，简化了 NestJS 应用程序中使用 MongoDB 的开发过程。它结合了 Mongoose 的灵活性和 NestJS 的模块化设计，使得开发者能够以类型安全、可维护的方式构建复杂的数据库交互逻辑。
 
 ## geoip-lite
 `geoip-lite` 是一个轻量级的 Node.js 库，用于根据 IP 地址获取地理位置信息。它无需依赖外部服务，使用本地的 GeoLite2 数据库进行 IP 地址的地理位置解析。geoip-lite 特别适合需要快速查找 IP 地址相关的国家、城市信息的场景，尤其是在对性能和响应时间有要求的应用中。
@@ -8418,7 +8418,7 @@ geoip-lite 使用的是 MaxMind 提供的 GeoLite2 数据库。每当你安装�
 ### 6. 更新数据库
 由于 geoip-lite 的数据库是本地存储的，因此需要定期更新以确保地理位置信息的准确性。你可以通过以下方式更新数据库：
 
-+ **手动更新**: 你可以通过以下命令更新数据库：
++ **手动更新**: 你可以通过以下命令更新数据库
 ```shell
 npm run-script updatedb
 ```
@@ -8524,6 +8524,7 @@ ECharts 支持多种图表类型，每种图表类型都有相应的 type 和对
 + **饼图 (pie)**: 用于展示数据在整体中的占比。
 + **散点图 (scatter)**: 用于展示两个变量之间的关系。
 + **雷达图 (radar)**: 用于展示多维数据。
+
 示例：折线图
 ```js
 var lineOption = {
@@ -8615,7 +8616,7 @@ Handlebars 的基本语法非常简单，使用 {{}} 作为占位符来插入变
 <p>Hello, John!</p>
 ```
 ### 2. 条件语句
-Handlebars 支持条件语句，通常使用 {{#if}} 和 {{else}} 来实现。例如：
+> Handlebars 支持条件语句，通常使用 `#if` 和 `else` 来实现。例如：
 ```html
 {{#if isAdmin}}
   <p>Welcome, Admin!</p>
@@ -8626,7 +8627,7 @@ Handlebars 支持条件语句，通常使用 {{#if}} 和 {{else}} 来实现。�
 根据 isAdmin 的值，模板会生成不同的内容。
 
 #### 3. 循环语句
-如果要渲染一个列表，可以使用 {{#each}} 语句。例如：
+> 如果要渲染一个列表，可以使用 `#each` 语句。例如：
 ```html
 <ul>
   {{#each items}}
@@ -8676,7 +8677,7 @@ var html = template(context);
 console.log(html); // 输出: <p>Today's date is Sat Aug 31 2024.</p>
 ```
 ### 6. 部分模板（Partials）
-Handlebars 还支持“部分模板”（partials），这对于重用模板片段非常有用。可以这样定义一个 partial：
+Handlebars 还支持"部分模板"（partials），这对于重用模板片段非常有用。可以这样定义一个 partial：
 ```html
 <!-- 定义部分模板 -->
 {{> header }}
@@ -8701,7 +8702,7 @@ var html = template(context);
 console.log(html); // 生成包含部分模板的完整HTML
 ```
 ### 7. 安全性
-Handlebars 会自动对插入的内容进行 HTML 转义，以防止 XSS（跨站脚本）攻击。如果需要插入未转义的 HTML，可以使用 {{{}}}。例如：
+`Handlebars` 会自动对插入的内容进行 HTML 转义，以防止 XSS（跨站脚本）攻击。如果需要插入未转义的 HTML，可以使用 三组大括号。例如：
 ```html
 <p>{{{rawHtml}}}</p>
 ```
@@ -8710,8 +8711,11 @@ Handlebars 会自动对插入的内容进行 HTML 转义，以防止 XSS（跨�
 ### 总结
 Handlebars 是一个功能强大且灵活的模板引擎，适用于静态网站生成器、单页应用程序（SPA）等场景。它通过简单的语法和强大的扩展能力，使得动态生成 HTML 变得更加高效。
 
+
+
+
 ## @Sse
-@Sse 是 NestJS 中用于处理服务器发送事件（Server-Sent Events, SSE）的装饰器。SSE 是一种允许服务器主动向客户端发送更新的技术，通常用于实时更新数据的场景，例如动态仪表盘、实时通知等。
+`@Sse` 是 NestJS 中用于处理服务器发送事件（Server-Sent Events, SSE）的装饰器。SSE 是一种允许服务器主动向客户端发送更新的技术，通常用于实时更新数据的场景，例如动态仪表盘、实时通知等。
 
 ### 1. 什么是 SSE？
 SSE 是一种从服务器向客户端单向推送数据的协议。与 WebSocket 不同，SSE 是通过 HTTP 协议实现的，且是单向通信——服务器可以主动向客户端推送数据，但客户端不能向服务器发送数据。
@@ -8719,9 +8723,9 @@ SSE 是一种从服务器向客户端单向推送数据的协议。与 WebSocket
 在客户端，使用 EventSource 对象可以方便地接收来自服务器的事件流。
 
 ### 2. @Sse 的使用
-在 NestJS 中，可以使用 @Sse() 装饰器来创建一个 SSE 端点。这个端点会持续不断地向连接的客户端推送数据流。
+在 NestJS 中，可以使用 `@Sse()` 装饰器来创建一个 SSE 端点。这个端点会持续不断地向连接的客户端推送数据流。
 
-以下是一个基本的例子，展示了如何在 NestJS 中使用 @Sse 装饰器：
+以下是一个基本的例子，展示了如何在 NestJS 中使用 `@Sse` 装饰器：
 ```js
 import { Controller, Sse } from '@nestjs/common';
 import { interval, map } from 'rxjs';
@@ -8740,7 +8744,7 @@ export class EventsController {
 }
 ```
 ### 3. 工作原理
-+ **定义端点**：在上面的例子中，@Sse('systemInfo') 定义了一个路径为 /events/systemInfo 的 SSE 端点。
++ **定义端点**：在上面的例子中，`@Sse('systemInfo')` 定义了一个路径为 /events/systemInfo 的 SSE 端点。
 + **返回数据流**：sendSystemInfo 方法返回的是一个 Observable，这个 Observable 会不断地发送数据流。每发送一次数据，客户端就会接收到一次消息。
 + **数据格式**：发送的数据应该遵循 SSE 的格式。典型的格式包括 data 字段，这是传递给客户端的实际数据。
 ### 4. 客户端如何接收数据
@@ -8834,6 +8838,8 @@ si.mem().then(data => {
   */
 });
 ```
+
+
 #### 3.3. 磁盘信息
 diskLayout() 方法返回系统磁盘的物理布局信息。
 ```js
