@@ -35,7 +35,7 @@ Schematics 是一个库，本身无法独立运行。可以在此 参考 CLI 中
 工具 API 由以下部分组成：
 
 ### 引擎
-`SchematicEngine` 负责加载和构建 `Collection` 和 `Schematics`。在创建引擎时，工具提供一个 `EngineHost` 接口，该接口了解如何通过名称创建 `CollectionDescription`，以及如何创建 `SchematicDescription。`
+`SchematicEngine` 负责加载和构建 `Collection` 和 `Schematics`。在创建引擎时，工具提供一个 `EngineHost` 接口，该接口了解如何通过名称创建 `CollectionDescription`，以及如何创建 `SchematicDescription`。
 
 ### Schematics（生成器）
 `Schematics` 是生成器，是 Collection 的一部分。
@@ -50,7 +50,9 @@ Schematics 是一个库，本身无法独立运行。可以在此 参考 CLI 中
 
 ### Schematic
 ## 操作符、Sources 和 Rules
-`Source` 是一个生成 `Tree` 的生成器；它从无到有创建一个全新的根 `Tree` `。Rule` 是从一个 `Tree` 到另一个 `Tree` 的转换。`Schematic`（在根目录）是一个通常应用于文件系统的 Rule。
+`Source` 是一个生成 `Tree` 的生成器；它从无到有创建一个全新的根 `Tree`。`Rule` 是从一个 `Tree` 到另一个 `Tree` 的转换。`Schematic`（在根目录）是一个通常应用于文件系统的 Rule。
+
+
 
 ### 操作符
 `FileOperator` 应用更改到单个 `FileEntry` 并返回一个新的 `FileEntry`。结果遵循以下规则：
@@ -58,6 +60,7 @@ Schematics 是一个库，本身无法独立运行。可以在此 参考 CLI 中
 + 如果返回的 `FileEntry` 为 null，将在操作列表中添加一个 `DeleteAction`。
 + 如果路径更改，将在操作列表中添加一个 RenameAction。
 + 如果内容更改，将在操作列表中添加一个 OverwriteAction。
+
 通过 `FileOperator` 无法创建文件。
 
 ### 提供的操作符
@@ -65,8 +68,8 @@ Schematics 库默认提供了多个 Operator 工厂，涵盖了基本用例：
 
 | FileOperator | 描述 |
 |-------------|------|
-| contentTemplate<T>(options: T) | 应用内容模板（见 模板化 部分） |
-| pathTemplate<T>(options: T) | 应用路径模板（见 模板化 部分） |
+| `contentTemplate<T>(options: T)` | 应用内容模板（见 模板化 部分） |
+| `pathTemplate<T>(options: T) `| 应用路径模板（见 模板化 部分） |
 
 ### 提供的 Sources
 Schematics 库还默认提供了多个 Source 工厂：
@@ -83,44 +86,42 @@ Schematics 库还默认提供了 Rule 工厂：
 
 | Rule | 描述 |
 |------|------|
-| noop() | 原样返回输入的 Tree。 |
-| chain(rules: Rule[]) | 返回一个由其他 Rule 组成的链式 Rule。 |
-| forEach(op: FileOperator) | 返回一个对输入 Tree 的每个文件应用操作符的 Rule。 |
-| move(root: string) | 将输入中的所有文件移动到子目录。 |
-| merge(other: Tree) | 将输入的 Tree 与其他 Tree 合并。 |
-| contentTemplate<T>(options: T) | 将内容模板应用到整个 Tree（见模板部分）。 |
-| pathTemplate<T>(options: T) | 将路径模板应用到整个 Tree（见模板部分）。 |
-| template<T>(options: T) | 同时将路径和内容模板应用到整个 Tree（见模板部分）。 |
-| filter(predicate: FilePredicate<boolean>) | 返回包含通过 FilePredicate 的文件的输入 Tree。 |
-
+| `noop() `| 原样返回输入的 Tree。 |
+| `chain(rules: Rule[])` | 返回一个由其他 Rule 组成的链式 Rule。 |
+| `forEach(op: FileOperator)` | 返回一个对输入 Tree 的每个文件应用操作符的 Rule。 |
+| `move(root: string)` | 将输入中的所有文件移动到子目录。 |
+| `merge(other: Tree)` | 将输入的 Tree 与其他 Tree 合并。 |
+| `contentTemplate<T>(options: T)` | 将内容模板应用到整个 Tree（见模板部分）。 |
+| `pathTemplate<T>(options: T)` | 将路径模板应用到整个 Tree（见模板部分）。 |
+| `template<T>(options: T) `| 同时将路径和内容模板应用到整个 Tree（见模板部分）。 |
+| `filter(predicate: FilePredicate<boolean>)` | 返回包含通过 FilePredicate 的文件的输入 Tree。 |
 ## 模板化
 如上所述，一些函数基于文件模板化系统，它包括路径和内容模板化。
 
-系统根据在 Tree 中加载的文件或其路径内定义的占位符进行操作，并按以下定义用传入 Rule 的值填充这些占位符（即 template<T>(options: T)）。
+系统根据在 Tree 中加载的文件或其路径内定义的占位符进行操作，并按以下定义用传入 Rule 的值填充这些占位符（即 `template<T>(options: T)`）。
 
 ### 路径模板化
+
 | 占位符 | 描述 |
 |--------|------|
-| __variable__ | 替换为 variable 的值。 |
-| __variable@function__ | 替换为调用 function(variable) 的结果。可以向左链式调用（__variable@function1@function2__ 等）。 |
+| `__variable__ `| 替换为 variable 的值。 |
+| `__variable@function__` | 替换为调用 `function(variable)` 的结果。可以向左链式调用（`__variable@function1@function2__` 等）。 |
 
 ### 内容模板化
 | 占位符 | 描述 |
 |--------|------|
-| <%= expression %> | 替换为调用给定表达式的结果。这仅支持直接表达式，不支持结构化（for/if/...）JavaScript。 |
-| <%- expression %> | 同上，但插入时结果将进行 HTML 转义（即替换 '<' 为 '\<'）。 |
-| <% inline code %> | 将给定代码插入到模板结构中，允许插入结构化 JavaScript。 |
-| <%# text %> | 注释，会被完全删除。 |
+| `<%= expression %>` | 替换为调用给定表达式的结果。这仅支持直接表达式，不支持结构化`（for/if/...）JavaScript`。 |
+| `<%- expression %>` | 同上，但插入时结果将进行 HTML 转义（即替换 `'<'` 为 `'\<'`）。 |
+| `<% inline code %>` | 将给定代码插入到模板结构中，允许插入结构化 `JavaScript`。 |
+| `<%# text %>` | 注释，会被完全删除。 |
 
 ## 示例
 ### 简单示例
-一个简单的 Schematics 示例，它创建一个 "hello world" 文件，并使用一个选项来确定其路径：
+一个简单的 `Schematics` 示例，它创建一个 `"hello world"` 文件，并使用一个选项来确定其路径：
 ```js
 import { Tree } from '@angular-devkit/schematics';
 
-export default function MySchematic(options
-
-: any) {
+export default function MySchematic(options: any) {
   return (tree: Tree) => {
     tree.create(options.path + '/hi', 'Hello world!');
     return tree;
