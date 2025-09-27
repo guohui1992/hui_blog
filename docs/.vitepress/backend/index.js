@@ -5,7 +5,9 @@ export const backendNav={
 		{
 			text: '框架',
 			items:[
+				{text: 'NodeJS', link:'/views/backend/nodejs/'},
 				{text: 'NestJS', link:'/views/backend/nestjs/'},
+				{text: 'Python', link:'/views/backend/python/'},
 				{text: 'Rust', link:'/views/backend/rust/'},
 			]
 		},

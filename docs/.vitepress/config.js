@@ -4,7 +4,9 @@ import {reactSidebar} from "./frontend/reactSidebar";
 import {skillSidebar} from "./soft_skill/skillSidebar";
 import {internalSkillSidebar} from "./internal_skill/skillSidebar";
 
+import {nodejsSidebar} from "./backend/nodejsSidebar";
 import {nestjsSidebar} from "./backend/nestjsSidebar";
+import {pythonSidebar} from "./backend/pythonSidebar";
 import {rustSidebar} from "./backend/rustSidebar";
 import {nginxSidebar } from "./backend/nginxSidebar";
 import {toolsSidebar} from "./tools/toolsSidebar";
@@ -63,10 +65,13 @@ export default {
 			'/views/frontend/css/': cssSidebar,
 			'/views/frontend/react/': reactSidebar,
 			// 后端
+			'/views/backend/nodejs/': nodejsSidebar,
 			'/views/backend/nestjs/': nestjsSidebar,
+			'/views/backend/python/': pythonSidebar,
 			'/views/backend/nginx/': nginxSidebar,
 			'/views/backend/gitLearn/': gitSidebar,
 			'/views/backend/rust/': rustSidebar,
+			
 			// 工具
 			'/views/tools/': toolsSidebar,
 			'/views/sec/': secSidebar,
