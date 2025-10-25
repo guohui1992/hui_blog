@@ -16,6 +16,7 @@ import {frontendNav} from "./frontend";
 import {backendNav} from "./backend";
 import {gitSidebar} from "./backend/gitSidebar";
 import {recordSidebar} from "./records/recordSidebar";
+import {llmSidebar} from "./llm/llmSidebar";
 
 
 export default {
@@ -54,6 +55,10 @@ export default {
 				link: '/views/internal_skill/index',
 			},
 			{
+				text: 'LLM',
+				link: '/views/llm/index',
+			},
+			{
 				text: '杂记',
 				link: '/views/records/index',
 			},
@@ -80,6 +85,8 @@ export default {
 			'/views/soft_skill/': skillSidebar,
 			// 个人内功
 			'/views/internal_skill/': internalSkillSidebar,
+			// LLM
+			'/views/llm/': llmSidebar,
 			// 杂记
 			'/views/records/': recordSidebar,
 		},
