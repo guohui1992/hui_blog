@@ -20,7 +20,7 @@ import {llmSidebar} from "./llm/llmSidebar";
 
 
 export default {
-	base: '/',
+	base: '/hui_blog/',
 	outDir: 'dist',
 	title: '疾风浴雪的花园',
 	description: 'Talk is cheap, show me your code.',
